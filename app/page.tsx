@@ -45,7 +45,7 @@ export default function Page() {
             chainId={base.id}
             calls={[{
               to: "0x31DB887337778319761330f79E4699a3f9A5F6c3", // Пока пустой адрес для теста
-              value: 0n,
+              value: BigInt(0),
             }]}
           >
             <TransactionButton 
