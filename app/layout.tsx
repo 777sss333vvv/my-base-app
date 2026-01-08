@@ -1,29 +1,30 @@
 import type { Metadata } from 'next';
-import { getFrameMetadata } from '@coinbase/onchainkit/frame'; // Импорт для фреймов
 import './globals.css';
 import { RootProvider } from './rootProvider';
 
-// Настройка того, как приложение выглядит в соцсетях и Base
+// Базовая настройка метаданных
 export const metadata: Metadata = {
-  title: 'Build Together Mini App',
+  title: 'Build Together',
   description: 'My first onchain application on Base',
   openGraph: {
     title: 'Build Together',
     description: 'My first onchain application on Base',
-    images: [`https://${process.env.VERCEL_URL}/og-image.png`],
+    images: ['/og-image.png'], // Упрощенный путь
   },
-  // Специальные теги для Farcaster и Base
   other: {
-    ...getFrameMetadata({
-      buttons: [{ label: 'Check in Now', action: 'post' }],
-      image: { src: `https://${process.env.VERCEL_URL}/og-image.png` },
-      input: { text: 'Your message' },
-      postUrl: `https://${process.env.VERCEL_URL}/api/frame`,
-    }),
+    // Теги для Farcaster Frames v2
+    'fc:frame': 'vNext',
+    'fc:frame:image': '/og-image.png',
+    'fc:frame:button:1': 'Check in Now',
+    'fc:frame:post_url': '/api/frame',
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>
