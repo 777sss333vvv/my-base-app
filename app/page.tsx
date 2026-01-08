@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react'; // 1. Добавили состояние
+import { useState, useEffect } from 'react'; //
+import { sdk } from '@farcaster/frame-sdk'; //
 import { 
   ConnectWallet, 
   Wallet, 
@@ -21,7 +22,13 @@ import { base } from 'viem/chains';
 export default function Page() {
   // Переменная, которая запоминает, всё ли прошло успешно
   const [successful, setSuccessful] = useState(false);
-
+  // Добавляем этот эффект:
+  useEffect(() => {
+    const load = async () => {
+      sdk.actions.ready(); // Сообщаем Farcaster, что мы готовы!
+    };
+    load();
+  }, []);
   // Функция, которая срабатывает при обновлении статуса транзакции
   const handleStatus = (status: any) => {
     console.log('Status:', status); // Для отладки в консоли
