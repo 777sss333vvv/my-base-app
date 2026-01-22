@@ -12,11 +12,21 @@ export const metadata: Metadata = {
     images: ['/og-image.png'], // Упрощенный путь
   },
   other: {
-    // Теги для Farcaster Frames v2
-    'fc:frame': 'vNext',
-    'fc:frame:image': '/og-image.png',
-    'fc:frame:button:1': 'Check in Now',
-    'fc:frame:post_url': '/api/frame',
+  other: {
+    'fc:frame': JSON.stringify({
+      version: "next",
+      imageUrl: `https://my-base-app.vercel.app/og-image.png`,
+      button: {
+        title: "Launch App",
+        action: {
+          type: "launch_frame",
+          name: "Build Together",
+          url: `https://your-app-name.vercel.app/`,
+          splashImageUrl: `https://your-app-name.vercel.app/og-image.png`,
+          splashBackgroundColor: "#0052FF",
+        },
+      },
+    }),
   },
 };
 

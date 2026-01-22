@@ -1,0 +1,11 @@
+{
+  "name": "Build Together",
+  "icon": "https://my-base-app.vercel.app/og-image.png",
+  "description": "My first Base Mini App",
+  "aboutUrl": "https://my-base-app.vercel.app",
+  "interactivity": {
+    "type": "frame",
+    "height": 694,
+    "width": 385
+  }
+}
