@@ -1,108 +1,92 @@
 'use client';
 
-import { useState, useEffect } from 'react'; //
-import { sdk } from '@farcaster/frame-sdk'; //
-import { 
-  ConnectWallet, 
-  Wallet, 
-  WalletDropdown, 
-  WalletDropdownDisconnect 
-} from '@coinbase/onchainkit/wallet';
+import { useState, useEffect } from 'react';
+import { sdk } from '@farcaster/frame-sdk';
 import { 
   Transaction, 
-  TransactionButton,
-  TransactionStatus,
-  TransactionToast, // Красивое всплывающее уведомление
-  TransactionToastIcon,
-  TransactionToastLabel,
-  TransactionToastAction,
+  TransactionButton, 
+  TransactionResponse 
 } from '@coinbase/onchainkit/transaction';
-import { base } from 'viem/chains';
+import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
+
+// TODO: REPLACE WITH YOUR REAL WALLET ADDRESS
+const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
 
 export default function Page() {
-  // Переменная, которая запоминает, всё ли прошло успешно
-  const [successful, setSuccessful] = useState(false);
-  // Добавляем этот эффект:
+  const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
+
   useEffect(() => {
     const load = async () => {
-      sdk.actions.ready(); // Сообщаем Farcaster, что мы готовы!
+      sdk.actions.ready();
     };
     load();
   }, []);
-  // Функция, которая срабатывает при обновлении статуса транзакции
-  const handleStatus = (status: any) => {
-    console.log('Status:', status); // Для отладки в консоли
-    if (status.statusName === 'success') {
-      setSuccessful(true); // Включаем режим успеха!
-    }
-  };
+
+  // Transaction for 0.000035 ETH (~0.1$)
+  const contracts = [
+    {
+      address: MY_WALLET_ADDRESS as `0x${string}`,
+      abi: [], 
+      functionName: '', 
+      args: [],
+      value: BigInt(35000000000000), // 0.000035 ETH in Wei
+    },
+  ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0052FF] text-white font-sans">
-      
-      <header className="mb-10 text-center">
-        <h1 className="text-5xl font-extrabold tracking-tight mb-2">
-          Build Together
-        </h1>
-        <p className="text-lg opacity-90">My First Base Mini App</p>
+    <div className="min-h-screen bg-[#0052FF] text-white flex flex-col items-center p-6 font-sans">
+      {/* Header */}
+      <header className="w-full max-w-md flex justify-between items-center mb-10">
+        <h1 className="text-xl font-bold tracking-tight">BUILD TOGETHER</h1>
+        <div className="scale-90 origin-right">
+          <Wallet>
+            <ConnectWallet className="bg-white text-[#0052FF] hover:bg-blue-50 font-bold" />
+          </Wallet>
+        </div>
       </header>
 
-      <main className="flex flex-col items-center gap-6 bg-white p-10 rounded-[32px] shadow-2xl w-full max-w-sm text-black">
-        
-        {/* Если успех — показываем поздравление, иначе — обычный экран */}
-        {successful ? (
-          <div className="text-center animate-in fade-in zoom-in duration-500">
-            <div className="text-6xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-green-600 mb-2">Success!</h2>
-            <p className="text-gray-600 mb-6">You have successfully checked in on Base.</p>
-            <button 
-              onClick={() => setSuccessful(false)}
-              className="bg-gray-100 hover:bg-gray-200 text-black px-6 py-2 rounded-xl font-semibold transition"
-            >
-              Back
-            </button>
-          </div>
-        ) : (
-          <>
-            <h2 className="text-2xl font-bold">Welcome</h2>
-            
-            <div className="w-full flex justify-center">
-              <Wallet>
-                <ConnectWallet className="bg-[#0052FF] hover:bg-[#0042CC] text-white rounded-xl px-8 py-3 font-semibold transition-all" />
-                <WalletDropdown>
-                  <WalletDropdownDisconnect />
-                </WalletDropdown>
-              </Wallet>
-            </div>
+      {/* Hero Section */}
+      <main className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl">
+        <div className="mb-8">
+          <h2 className="text-3xl font-extrabold mb-3">Build #1</h2>
+          <p className="text-blue-50 text-lg leading-relaxed opacity-90">
+            Every journey starts with a single step. Join the movement of open onchain building and secure your spot among the first pioneers.
+          </p>
+        </div>
 
-            <div className="w-full mt-4">
-              <Transaction
-                chainId={base.id}
-                calls={[{
-                  to: "0x31DB887337778319761330f79E4699a3f9A5F6c3", // Ваш адрес
-                  value: BigInt(0), // Используем безопасный формат
-                }]}
-                onStatus={handleStatus} // <-- Вот тут магия, слушаем статус
-              >
-                <TransactionButton 
-                  className="w-full bg-black hover:bg-zinc-800 text-white rounded-xl py-4 font-bold text-lg transition-transform active:scale-95"
-                  text="Check in" 
-                />
-                
-                {/* Всплывающее уведомление от OnchainKit */}
-                <TransactionToast>
-                  <TransactionToastIcon />
-                  <TransactionToastLabel />
-                  <TransactionToastAction />
-                </TransactionToast>
-              </Transaction>
-            </div>
-          </>
-        )}
+        {/* Transaction Block */}
+        <div className="space-y-4">
+          <div className="bg-black/20 rounded-2xl p-4 flex justify-between items-center border border-white/10">
+            <span className="text-sm font-medium opacity-80">Support development</span>
+            <span className="font-mono font-bold">0.000035 ETH</span>
+          </div>
+          
+          <Transaction 
+            chainId={8453} 
+            contracts={contracts as any}
+            onStatus={(status) => console.log('Transaction Status:', status)}
+          >
+            <TransactionButton 
+              className="w-full bg-white text-[#0052FF] font-bold py-4 rounded-2xl transition-all active:scale-95 hover:shadow-lg" 
+              text="Check-in & Support"
+            />
+          </Transaction>
+        </div>
       </main>
 
-      <footer className="mt-10 opacity-60 text-sm text-white">
-        Powered by Base
+      {/* Future Section (Waitlist) */}
+      <section className="w-full max-w-md mt-8">
+        <button 
+          onClick={() => setIsWaitlistJoined(true)}
+          className="w-full py-4 rounded-2xl border-2 border-dashed border-white/30 text-white font-medium hover:border-white/60 hover:bg-white/5 transition-all"
+        >
+          {isWaitlistJoined ? "✅ Added to Waitlist for App #2" : "Join Waitlist for Next App"}
+        </button>
+      </section>
+
+      {/* Footer */}
+      <footer className="mt-auto pt-10 text-white/40 text-[10px] uppercase tracking-widest">
+        Base Network • Powered by OnchainKit
       </footer>
     </div>
   );
