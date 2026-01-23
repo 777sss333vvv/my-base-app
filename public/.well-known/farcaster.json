@@ -7,11 +7,11 @@
   "frame": {
     "version": "1",
     "name": "Build Together",
-    "iconUrl": "https://my-base-app.vercel.app/icon.png",
-    "homeUrl": "https://my-base-app.vercel.app",
-    "imageUrl": "https://my-base-app.vercel.app/og-image.png",
+    "iconUrl": "https://www.prosperitypass.xyz/icon.png",
+    "homeUrl": "https://www.prosperitypass.xyz",
+    "imageUrl": "https://www.prosperitypass.xyz/og-image.png",
     "buttonTitle": "Launch",
-    "splashImageUrl": "https://my-base-app.vercel.app/splash.png",
+    "splashImageUrl": "https://www.prosperitypass.xyz/splash.png",
     "splashBackgroundColor": "#0052FF"
   }
 }
