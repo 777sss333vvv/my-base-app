@@ -1,0 +1,17 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjIyOTY1OCwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDY3MDE4MWJBYkU4YzU2NDMxMTBDMUJkY2UzNzBhNWU1OTQ0YjJlMUYifQ",
+    "payload": "eyJkb21haW4iOiJwcm9zcGVyaXR5cGFzcy54eXoifQ",
+    "signature": "nAx7mxc2yZtyuvQP9jfqynDZfdVRJizfqHdbcpMgnd5TYTo3u5igH6ClHDieKItKLq55IGnJZvjmYkbe8BX1PBw="
+  },
+  "frame": {
+    "version": "1",
+    "name": "Build Together",
+    "iconUrl": "https://my-base-app.vercel.app/icon.png",
+    "homeUrl": "https://my-base-app.vercel.app",
+    "imageUrl": "https://my-base-app.vercel.app/og-image.png",
+    "buttonTitle": "Launch",
+    "splashImageUrl": "https://my-base-app.vercel.app/splash.png",
+    "splashBackgroundColor": "#0052FF"
+  }
+}
