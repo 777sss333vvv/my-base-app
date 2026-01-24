@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
 import { 
@@ -16,7 +17,6 @@ const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3';
 
 export default function Page() {
   const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
-  // Используем простой тип, чтобы не конфликтовать с экспортами SDK
   const [user, setUser] = useState<any>(null);
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
@@ -50,8 +50,7 @@ export default function Page() {
         <h1 className="text-xl font-bold tracking-tight italic">BUILD TOGETHER</h1>
         <div className="scale-90 origin-right">
           <Wallet>
-            <ConnectWallet className="bg-white text-[#0052FF] hover:bg-blue-50 font-bold">
-            </ConnectWallet>
+            <ConnectWallet className="bg-white text-[#0052FF] hover:bg-blue-50 font-bold" />
           </Wallet>
         </div>
       </header>
@@ -85,7 +84,7 @@ export default function Page() {
         </div>
 
         <div className="space-y-4">
-          {/* @ts-ignore - подавляем строгую проверку типов для Transaction */}
+          {/* @ts-expect-error - OnchainKit types compatibility */}
           <Transaction 
             chainId={8453} 
             calls={calls}
@@ -107,7 +106,7 @@ export default function Page() {
           onClick={() => setIsWaitlistJoined(true)}
           className="w-full py-4 rounded-2xl bg-black/20 border border-white/10 text-white font-medium hover:bg-black/30 transition-all shadow-inner"
         >
-          {isWaitlistJoined ? "✅ Added to App #2 (Builder's Path)" : "Join App #2 Waitlist"}
+          {isWaitlistJoined ? "✅ Added to App #2" : "Join App #2 Waitlist"}
         </button>
       </section>
 
