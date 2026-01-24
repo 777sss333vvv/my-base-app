@@ -8,8 +8,7 @@ import {
 } from '@coinbase/onchainkit/transaction';
 import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
 
-// TODO: REPLACE WITH YOUR REAL WALLET ADDRESS
-const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
+const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3';
 
 export default function Page() {
   const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
@@ -17,7 +16,6 @@ export default function Page() {
 
   useEffect(() => {
     const load = async () => {
-      // Получаем данные пользователя из SDK Farcaster
       const context = await sdk.context;
       if (context?.user) {
         setUser(context.user);
@@ -48,64 +46,66 @@ export default function Page() {
       </header>
 
       {/* Hero Section */}
-      <main className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl transition-all">
+      <main className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl">
         <div className="mb-8 flex flex-col items-center text-center">
-          
-          {/* Аватарка пользователя */}
           {user?.pfpUrl ? (
             <img 
               src={user.pfpUrl} 
               alt="Profile" 
-              className="w-24 h-24 rounded-full border-4 border-white/30 mb-4 shadow-2xl animate-in fade-in zoom-in duration-500"
+              className="w-20 h-20 rounded-full border-4 border-white/30 mb-4 shadow-xl"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-white/20 mb-4 flex items-center justify-center text-3xl shadow-inner">
+            <div className="w-20 h-20 rounded-full bg-white/20 mb-4 flex items-center justify-center text-3xl">
               🏗️
             </div>
           )}
           
-          <h2 className="text-3xl font-extrabold mb-3">
-            {user ? `Hi, ${user.username}!` : "Welcome, Builder"}
+          <h2 className="text-2xl font-extrabold mb-2">
+            {user ? `Welcome, ${user.username}` : "Hello, Builder"}
           </h2>
           
-          <p className="text-blue-50 text-lg leading-relaxed opacity-90">
-            {user 
-              ? "Your presence makes this movement stronger. Ready to support the vision?"
-              : "Every journey starts with a single step. Join the movement of open onchain building."}
-          </p>
+          {/* THE VISION TEXT */}
+          <div className="space-y-4 mt-2">
+            <p className="text-blue-50 text-md leading-relaxed">
+              This Mini App is living proof that <span className="font-bold underline">anyone</span> can build onchain. No massive teams, no huge budgets.
+            </p>
+            <div className="h-[1px] w-1/2 bg-white/20 mx-auto" />
+            <p className="text-sm italic opacity-80">
+              Our mission: empowering others to build. Check-in to support the movement and learn how to create your own.
+            </p>
+          </div>
         </div>
 
         {/* Transaction Block */}
         <div className="space-y-4">
-          <div className="bg-black/20 rounded-2xl p-4 flex justify-between items-center border border-white/10">
-            <span className="text-sm font-medium opacity-80">Support movement</span>
-            <span className="font-mono font-bold">0.000035 ETH</span>
-          </div>
-          
           <Transaction 
             chainId={8453} 
             calls={calls as any}
           >
             <TransactionButton 
-              className="w-full bg-white text-[#0052FF] font-bold py-4 rounded-2xl transition-all active:scale-95 hover:shadow-lg shadow-white/10" 
+              className="w-full bg-white text-[#0052FF] font-bold py-4 rounded-2xl active:scale-95 transition-all shadow-lg shadow-blue-900/20" 
               text="Check-in & Support"
             />
           </Transaction>
         </div>
       </main>
 
-      {/* Future Section (Waitlist) */}
-      <section className="w-full max-w-md mt-8">
+      {/* Waitlist Section */}
+      <section className="w-full max-w-md mt-6">
         <button 
           onClick={() => setIsWaitlistJoined(true)}
-          className="w-full py-4 rounded-2xl border-2 border-dashed border-white/30 text-white font-medium hover:border-white/60 hover:bg-white/5 transition-all shadow-sm"
+          className="w-full py-4 rounded-2xl bg-black/20 border border-white/10 text-white font-medium hover:bg-black/30 transition-all"
         >
-          {isWaitlistJoined ? "✅ Added to Waitlist for App #2" : "Join Waitlist for Next App"}
+          {isWaitlistJoined ? "✅ Added to App #2 (Builder's Path)" : "Join App #2 Waitlist"}
         </button>
+        <p className="text-[10px] text-center mt-3 opacity-50 uppercase tracking-widest">
+          Next: Step-by-step guide for solo builders
+        </p>
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto pt-10 text-white/40 text-[10px] uppercase tracking-widest">
+      <footer className="mt-auto pt-8 text-white/40 text-[9px] uppercase tracking-[0.2em] text-center">
+        Built by a Solo Developer <br/>
         Base Network • Powered by OnchainKit
       </footer>
     </div>
