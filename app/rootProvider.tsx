@@ -6,7 +6,6 @@ import { WagmiProvider, createConfig, http } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { coinbaseWallet } from "wagmi/connectors";
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector";
-// import "@coinbase/onchainkit/styles.css"; // УДАЛЕНО: вызывает ошибку билда
 
 const queryClient = new QueryClient();
 

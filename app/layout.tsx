@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import '@coinbase/onchainkit/styles.css';
+// УДАЛЕНО: import '@coinbase/onchainkit/styles.css'; <--- ЭТО ПРИЧИНА ОШИБКИ
 import './globals.css';
 import { RootProvider } from './rootProvider';
 
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* Загружаем стили напрямую, чтобы PostCSS их не проверял */}
+        {/* Это правильный способ подключения стилей OnchainKit для Next.js 15 */}
         <link 
           rel="stylesheet" 
           href="https://unpkg.com/@coinbase/onchainkit@latest/dist/assets/style.css" 
