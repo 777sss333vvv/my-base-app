@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { sdk } from '@farcaster/frame-sdk';
+import { useState, useEffect } from 'react';
+import { sdk, type FrameContext } from '@farcaster/frame-sdk';
 import { 
   Transaction, 
   TransactionButton,
@@ -16,7 +16,8 @@ const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3';
 
 export default function Page() {
   const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  // Заменяем any на правильный тип из SDK
+  const [user, setUser] = useState<FrameContext['user'] | null>(null);
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
 
@@ -61,6 +62,7 @@ export default function Page() {
       <main className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl">
         <div className="mb-8 flex flex-col items-center text-center">
           {user?.pfpUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img 
               src={user.pfpUrl} 
               alt="Profile" 
@@ -88,13 +90,12 @@ export default function Page() {
         <div className="space-y-4">
           <Transaction 
             chainId={8453} 
-            calls={calls as any}
+            calls={calls}
           >
             <TransactionButton 
               className="w-full bg-white text-[#0052FF] font-bold py-4 rounded-2xl active:scale-95 transition-all shadow-lg" 
               text="Check-in & Support"
             />
-            {/* Добавляем статус транзакции, чтобы убрать мерцание и дать фидбек */}
             <TransactionStatus className="text-center mt-2">
               <TransactionStatusLabel className="text-white text-xs" />
               <TransactionStatusAction className="text-blue-200 text-xs underline" />

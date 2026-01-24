@@ -1,16 +1,10 @@
 import type { Metadata } from 'next';
-// УДАЛЕНО: import '@coinbase/onchainkit/styles.css'; <--- ЭТО ПРИЧИНА ОШИБКИ
 import './globals.css';
 import { RootProvider } from './rootProvider';
 
 export const metadata: Metadata = {
   title: 'Build Together',
   description: 'My first onchain application on Base',
-  openGraph: {
-    title: 'Build Together',
-    description: 'My first onchain application on Base',
-    images: ['/og-image.png'],
-  },
   other: {
     'fc:frame': JSON.stringify({
       version: "next",
@@ -21,19 +15,16 @@ export const metadata: Metadata = {
           type: "launch_frame",
           name: "Build Together",
           url: `https://my-base-app.vercel.app/`, 
-          splashImageUrl: `https://my-base-app.vercel.app/og-image.png`,
-          splashBackgroundColor: "#0052FF",
         },
       },
     }),
-  } as any
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        {/* Это правильный способ подключения стилей OnchainKit для Next.js 15 */}
         <link 
           rel="stylesheet" 
           href="https://unpkg.com/@coinbase/onchainkit@latest/dist/assets/style.css" 
