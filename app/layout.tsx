@@ -29,16 +29,15 @@ export const metadata: Metadata = {
   } as any
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        {/* Это подключит стили в обход сборщика webpack/postcss */}
-        <link rel="stylesheet" href="https://unpkg.com/@coinbase/onchainkit@0.17.0/dist/assets/style.css" />
+        {/* Загружаем стили напрямую, чтобы PostCSS их не проверял */}
+        <link 
+          rel="stylesheet" 
+          href="https://unpkg.com/@coinbase/onchainkit@latest/dist/assets/style.css" 
+        />
       </head>
       <body>
         <RootProvider>{children}</RootProvider>
