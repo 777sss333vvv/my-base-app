@@ -84,7 +84,6 @@ export default function Page() {
         </div>
 
         <div className="space-y-4">
-          {/* @ts-expect-error - OnchainKit types compatibility */}
           <Transaction 
             chainId={8453} 
             calls={calls}
