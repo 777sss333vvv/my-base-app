@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Подключаем стили библиотеки здесь, чтобы PostCSS не ругался */
-@import '@coinbase/onchainkit/styles.css';
-
 html, body {
   padding: 0;
   margin: 0;

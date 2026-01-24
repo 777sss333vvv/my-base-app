@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import '@coinbase/onchainkit/styles.css';
 import './globals.css';
 import { RootProvider } from './rootProvider';
 
@@ -35,6 +36,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Это подключит стили в обход сборщика webpack/postcss */}
+        <link rel="stylesheet" href="https://unpkg.com/@coinbase/onchainkit@0.17.0/dist/assets/style.css" />
+      </head>
       <body>
         <RootProvider>{children}</RootProvider>
       </body>
