@@ -18,20 +18,31 @@ const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3';
 export default function Page() {
   const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isSDKLoaded, setIsSDKLoaded] = useState(false);
+
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
 
   useEffect(() => {
     const load = async () => {
-      const context = await sdk.context;
-      if (context?.user) {
-        setUser(context.user);
-        const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
-        if (farcasterConnector && !isConnected) {
-          connect({ connector: farcasterConnector });
+      try {
+        const context = await sdk.context;
+        
+        // Умный фильтр: работаем с Farcaster только если мы внутри него
+        if (context?.user) {
+          setUser(context.user);
+          
+          const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
+          if (farcasterConnector && !isConnected) {
+            connect({ connector: farcasterConnector });
+          }
         }
+      } catch (error) {
+        console.error("SDK load error:", error);
+      } finally {
+        setIsSDKLoaded(true);
+        sdk.actions.ready();
       }
-      sdk.actions.ready();
     };
     load();
   }, [connectors, isConnected, connect]);
