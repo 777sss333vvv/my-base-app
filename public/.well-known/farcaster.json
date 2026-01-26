@@ -16,7 +16,6 @@
     "description": "Join the movement of solo builders on Base. Support the community with an onchain check-in.",
     "screenshots": [
       "https://www.prosperitypass.xyz/screenshot1.png"
-    ],
-    "webhookUrl": ""
+    ]
     }
 }
