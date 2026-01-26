@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
 import { 
   Transaction, 
@@ -16,12 +16,21 @@ import { useAccount, useConnect } from 'wagmi';
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
 
 export default function Page() {
-  const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
+const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
 
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
+
+  // Добавляем функцию шеринга сюда
+  const handleShare = useCallback(() => {
+    const shareText = "I'm building onchain with Build Together! 🏗️ Join the movement on @base";
+    const targetUrl = "https://www.prosperitypass.xyz";
+    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
+    
+    sdk.actions.openUrl(shareUrl);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -97,22 +106,33 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Transaction Block - ТЕПЕРЬ С ПРОВЕРКОЙ ЗАГРУЗКИ */}
+{/* Transaction Block - ТЕПЕРЬ С ПРОВЕРКОЙ ЗАГРУЗКИ */}
         <div className="space-y-4">
           {isSDKLoaded ? (
-            <Transaction 
-              chainId={8453} 
-              calls={calls as any}
-            >
-              <TransactionButton 
-                className="w-full bg-white text-[#0052FF] font-bold py-4 rounded-2xl active:scale-95 transition-all shadow-lg shadow-blue-900/20" 
-                text="Check-in & Support"
-              />
-              <TransactionStatus className="text-center mt-2">
-                <TransactionStatusLabel className="text-white text-xs" />
-                <TransactionStatusAction className="text-blue-200 text-xs underline" />
-              </TransactionStatus>
-            </Transaction>
+            <>
+              <Transaction 
+                chainId={8453} 
+                calls={calls as any}
+              >
+                <TransactionButton 
+                  className="w-full bg-white text-[#0052FF] font-bold py-4 rounded-2xl active:scale-95 transition-all shadow-lg shadow-blue-900/20" 
+                  text="Check-in & Support"
+                />
+                <TransactionStatus className="text-center mt-2">
+                  <TransactionStatusLabel className="text-white text-xs" />
+                  <TransactionStatusAction className="text-blue-200 text-xs underline" />
+                </TransactionStatus>
+              </Transaction>
+
+              {/* Кнопка шеринга — добавлена здесь */}
+              <button
+                onClick={handleShare}
+                className="w-full bg-transparent border border-white/20 text-white/80 hover:text-white hover:border-white/40 font-medium py-3 rounded-2xl active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
+              >
+                <span>Share the Movement</span>
+                <span className="opacity-50">↗</span>
+              </button>
+            </>
           ) : (
             <div className="w-full py-4 text-center animate-pulse text-white/50 bg-white/5 rounded-2xl border border-white/10">
               Initializing App...
