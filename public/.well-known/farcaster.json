@@ -4,14 +4,19 @@
     "payload": "eyJkb21haW4iOiJ3d3cucHJvc3Blcml0eXBhc3MueHl6In0",
     "signature": "/BmJD5Pk+e7v3c+zt/LlA0MtVJnARlJr43EKhA6JucMnjGGksaUZzeKu7TuWgamYyVoQGWXBkjlPXUcL2U15OBw="
   },
-  "frame": {
+"frame": {
     "version": "1",
     "name": "Build Together",
     "iconUrl": "https://www.prosperitypass.xyz/icon.png",
     "homeUrl": "https://www.prosperitypass.xyz",
     "imageUrl": "https://www.prosperitypass.xyz/og-image.png",
-    "buttonTitle": "Launch",
+    "buttonTitle": "Start Building",
     "splashImageUrl": "https://www.prosperitypass.xyz/splash.png",
-    "splashBackgroundColor": "#0052FF"
-  }
+    "splashBackgroundColor": "#0052FF",
+    "description": "Join the movement of solo builders on Base. Support the community with an onchain check-in.",
+    "screenshots": [
+      "https://www.prosperitypass.xyz/screenshot1.png"
+    ],
+    "webhookUrl": ""
+    }
 }
