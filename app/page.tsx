@@ -48,6 +48,14 @@ export default function Page() {
         const context = await sdk.context;
         if (context?.user) {
           setUser(context.user);
+          
+          // ЗАГРУЗКА ДРУЗЕЙ: Теперь setTopFriends используется!
+          const res = await fetch(`/api/friends?fid=${context.user.fid}`);
+          const friendsData = await res.json();
+          if (Array.isArray(friendsData)) {
+            setTopFriends(friendsData);
+          }
+
           const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
           if (farcasterConnector && !isConnected) {
             connect({ connector: farcasterConnector });
