@@ -16,16 +16,26 @@ import { useAccount, useConnect } from 'wagmi';
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
 
 export default function Page() {
-const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
+  const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
+  const [topFriends, setTopFriends] = useState<any[]>([]);
 
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
 
-  // Добавляем функцию шеринга сюда
+  // 1. Общий шеринг
   const handleShare = useCallback(() => {
     const shareText = "I'm building onchain with Build Together! 🏗️ Join the movement on @base";
+    const targetUrl = "https://www.prosperitypass.xyz";
+    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
+    
+    sdk.actions.openUrl(shareUrl);
+  }, []);
+
+  // 2. ПЕРСОНАЛЬНЫЙ ШЕРИНГ ДЛЯ ДРУЗЕЙ (Этого не хватало!)
+  const handleInviteFriend = useCallback((friendUsername: string) => {
+    const shareText = `Hey @${friendUsername}, I'm already building onchain with Build Together! 🏗️🔵 Join me on @base.`;
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
     
@@ -36,11 +46,8 @@ const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
     const load = async () => {
       try {
         const context = await sdk.context;
-        
-        // Умный фильтр: работаем с Farcaster только если мы внутри него
         if (context?.user) {
           setUser(context.user);
-          
           const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
           if (farcasterConnector && !isConnected) {
             connect({ connector: farcasterConnector });
@@ -66,7 +73,6 @@ const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#0052FF] text-white flex flex-col items-center p-6 font-sans">
-      {/* Header */}
       <header className="w-full max-w-md flex justify-between items-center mb-10">
         <h1 className="text-xl font-bold tracking-tight italic">BUILD TOGETHER</h1>
         <div className="scale-90 origin-right">
@@ -76,7 +82,6 @@ const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
         </div>
       </header>
 
-      {/* Hero Section */}
       <main className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl">
         <div className="mb-8 flex flex-col items-center text-center">
           {user?.pfpUrl ? (
@@ -97,23 +102,19 @@ const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
           
           <div className="space-y-4 mt-2">
             <p className="text-blue-50 text-md leading-relaxed">
-              This Mini App is living proof that <span className="font-bold underline">anyone</span> can build onchain. No massive teams, no huge budgets.
+              This Mini App is living proof that <span className="font-bold underline">anyone</span> can build onchain.
             </p>
             <div className="h-[1px] w-1/2 bg-white/20 mx-auto" />
             <p className="text-sm italic opacity-80">
-              Our mission: empowering others to build. Check-in to support the movement.
+              Our mission: empowering others to build.
             </p>
           </div>
         </div>
 
-{/* Transaction Block - ТЕПЕРЬ С ПРОВЕРКОЙ ЗАГРУЗКИ */}
         <div className="space-y-4">
           {isSDKLoaded ? (
             <>
-              <Transaction 
-                chainId={8453} 
-                calls={calls as any}
-              >
+              <Transaction chainId={8453} calls={calls as any}>
                 <TransactionButton 
                   className="w-full bg-white text-[#0052FF] font-bold py-4 rounded-2xl active:scale-95 transition-all shadow-lg shadow-blue-900/20" 
                   text="Check-in & Support"
@@ -124,7 +125,6 @@ const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
                 </TransactionStatus>
               </Transaction>
 
-              {/* Кнопка шеринга — добавлена здесь */}
               <button
                 onClick={handleShare}
                 className="w-full bg-transparent border border-white/20 text-white/80 hover:text-white hover:border-white/40 font-medium py-3 rounded-2xl active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
@@ -132,6 +132,33 @@ const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
                 <span>Share the Movement</span>
                 <span className="opacity-50">↗</span>
               </button>
+
+              {/* Блок друзей - появится только когда массив topFriends заполнится */}
+              {topFriends.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <p className="text-white/60 text-[10px] mb-4 text-center uppercase tracking-[0.2em] font-bold">
+                    Invite your inner circle
+                  </p>
+                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                    {topFriends.map((friend) => (
+                      <button
+                        key={friend.fid}
+                        onClick={() => handleInviteFriend(friend.username)}
+                        className="flex-shrink-0 flex flex-col items-center gap-1 group transition-transform active:scale-90"
+                      >
+                        <img 
+                          src={friend.pfp_url} 
+                          alt={friend.username}
+                          className="w-12 h-12 rounded-full border-2 border-transparent group-hover:border-[#0052FF] transition-all object-cover"
+                        />
+                        <span className="text-[10px] text-white/40 group-hover:text-white truncate w-14">
+                          @{friend.username}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="w-full py-4 text-center animate-pulse text-white/50 bg-white/5 rounded-2xl border border-white/10">
@@ -141,7 +168,6 @@ const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
         </div>
       </main>
 
-      {/* Waitlist Section */}
       <section className="w-full max-w-md mt-6">
         <button 
           onClick={() => setIsWaitlistJoined(true)}
@@ -149,12 +175,8 @@ const [isWaitlistJoined, setIsWaitlistJoined] = useState(false);
         >
           {isWaitlistJoined ? "✅ Added to App #2 (Builder's Path)" : "Join App #2 Waitlist"}
         </button>
-        <p className="text-[10px] text-center mt-3 opacity-50 uppercase tracking-widest">
-          Next: Step-by-step guide for solo builders
-        </p>
       </section>
 
-      {/* Footer */}
       <footer className="mt-auto pt-8 text-white/40 text-[9px] uppercase tracking-[0.2em] text-center">
         Built by a Solo Developer <br/>
         Base Network • Powered by OnchainKit
