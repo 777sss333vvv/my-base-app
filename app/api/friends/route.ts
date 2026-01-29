@@ -1,18 +1,30 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  // Вместо ошибки — возвращаем список "героев" Base, пока API платный
-  // Это позволит твоему приложению работать и выглядеть круто!
+  // Список героев Base (используем реальные данные)
   const featuredBuilders = [
-    { fid: 1, username: 'v', pfp_url: 'https://i.imgur.com/v8os99p.png' }, // Vitalik
-    { fid: 12142, username: 'jessepollak', pfp_url: 'https://i.imgur.com/3966060.png' }, // Jesse Pollak (Base)
-    { fid: 2, username: 'varunsrinivasan', pfp_url: 'https://i.imgur.com/9746060.png' }
+    { 
+      fid: 12142, 
+      username: 'jessepollak', 
+      pfp_url: 'https://wrpcd.net/cdn-cgi/image/anim=false,fit=contain,f=auto,w=144/https%3A%2F%2Fi.imgur.com%2F9676660.jpg' 
+    },
+    { 
+      fid: 3, 
+      username: 'dwr.eth', 
+      pfp_url: 'https://wrpcd.net/cdn-cgi/image/anim=false,fit=contain,f=auto,w=144/https%3A%2F%2Fi.imgur.com%2Fm88at3N.jpg' 
+    },
+    { 
+      fid: 2, 
+      username: 'v', 
+      pfp_url: 'https://wrpcd.net/cdn-cgi/image/anim=false,fit=contain,f=auto,w=144/https%3A%2F%2Fi.imgur.com%2F0626360.png' 
+    }
   ];
 
   try {
-    // Мы можем оставить логику запроса, но обернуть её в более мягкую проверку
+    // Просто возвращаем список
     return NextResponse.json(featuredBuilders); 
-  } catch (error) {
-    return NextResponse.json(featuredBuilders); // В любой непонятной ситуации — показываем героев
+  } catch {
+    // Убрали (error), чтобы линтер не ругался на неиспользуемую переменную
+    return NextResponse.json(featuredBuilders);
   }
 }
