@@ -1,30 +1,23 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  // Список героев Base (используем реальные данные)
   const featuredBuilders = [
     { 
       fid: 12142, 
-      username: 'jessepollak', 
-      pfp_url: 'https://wrpcd.net/cdn-cgi/image/anim=false,fit=contain,f=auto,w=144/https%3A%2F%2Fi.imgur.com%2F9676660.jpg' 
+      username: 'base', 
+      pfp_url: 'https://github.com/base-org.png' 
+    },
+    { 
+      fid: 5650, 
+      username: 'vitalik.eth', 
+      pfp_url: 'https://github.com/vbuterin.png' 
     },
     { 
       fid: 3, 
       username: 'dwr.eth', 
-      pfp_url: 'https://wrpcd.net/cdn-cgi/image/anim=false,fit=contain,f=auto,w=144/https%3A%2F%2Fi.imgur.com%2Fm88at3N.jpg' 
-    },
-    { 
-      fid: 2, 
-      username: 'v', 
-      pfp_url: 'https://wrpcd.net/cdn-cgi/image/anim=false,fit=contain,f=auto,w=144/https%3A%2F%2Fi.imgur.com%2F0626360.png' 
+      pfp_url: 'https://github.com/danromero.png' 
     }
   ];
 
-  try {
-    // Просто возвращаем список
-    return NextResponse.json(featuredBuilders); 
-  } catch {
-    // Убрали (error), чтобы линтер не ругался на неиспользуемую переменную
-    return NextResponse.json(featuredBuilders);
-  }
+  return NextResponse.json(featuredBuilders);
 }

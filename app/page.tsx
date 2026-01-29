@@ -155,10 +155,15 @@ export default function Page() {
                         className="flex-shrink-0 flex flex-col items-center gap-1 group transition-transform active:scale-90"
                       >
                         <img 
-                          src={friend.pfp_url} 
-                          alt={friend.username}
-                          className="w-12 h-12 rounded-full border-2 border-transparent group-hover:border-[#0052FF] transition-all object-cover"
-                        />
+  src={friend.pfp_url} 
+  alt={friend.username}
+  className="w-12 h-12 rounded-full border-2 border-transparent group-hover:border-[#0052FF] transition-all object-cover"
+  onError={(e) => {
+    const target = e.target as HTMLImageElement;
+    // Если картинка не грузится, создаем красивую иконку с буквой имени
+    target.src = `https://ui-avatars.com/api/?name=${friend.username}&background=ffffff&color=0052FF`;
+  }}
+/>
                         <span className="text-[10px] text-white/40 group-hover:text-white truncate w-14">
                           @{friend.username}
                         </span>
