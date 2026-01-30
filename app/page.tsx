@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
 import { 
@@ -11,7 +10,7 @@ import {
   TransactionStatusAction
 } from '@coinbase/onchainkit/transaction';
 import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
-import { useAccount, useConnect } from 'wagmi';
+import { useAccount, useConnect, usePublicClient } from 'wagmi';
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
 
@@ -20,9 +19,11 @@ export default function Page() {
   const [user, setUser] = useState<any>(null);
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [topFriends, setTopFriends] = useState<any[]>([]);
+  const [txCount, setTxCount] = useState<number | null>(null);
 
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
+  const publicClient = usePublicClient();
 
   // 1. Общий шеринг
   const handleShare = useCallback(() => {
@@ -33,7 +34,7 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, []);
 
-  // 2. ПЕРСОНАЛЬНЫЙ ШЕРИНГ ДЛЯ ДРУЗЕЙ (Этого не хватало!)
+  // 2. Персональный инвайт
   const handleInviteFriend = useCallback((friendUsername: string) => {
     const shareText = `Hey @${friendUsername}, I'm already building onchain with Build Together! 🏗️🔵 Join me on @base.`;
     const targetUrl = "https://www.prosperitypass.xyz";
@@ -42,6 +43,7 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, []);
 
+  // Основная загрузка данных
   useEffect(() => {
     const load = async () => {
       try {
@@ -49,13 +51,14 @@ export default function Page() {
         if (context?.user) {
           setUser(context.user);
           
-          // ЗАГРУЗКА ДРУЗЕЙ: Теперь setTopFriends используется!
+          // Загрузка друзей (наши герои)
           const res = await fetch(`/api/friends?fid=${context.user.fid}`);
           const friendsData = await res.json();
           if (Array.isArray(friendsData)) {
             setTopFriends(friendsData);
           }
 
+          // Авто-коннект кошелька Farcaster
           const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
           if (farcasterConnector && !isConnected) {
             connect({ connector: farcasterConnector });
@@ -70,6 +73,23 @@ export default function Page() {
     };
     load();
   }, [connectors, isConnected, connect]);
+
+  // Загрузка Onchain Score (транзакции)
+  useEffect(() => {
+    const fetchScore = async () => {
+      if (user?.custodyAddress && publicClient) {
+        try {
+          const count = await publicClient.getTransactionCount({
+            address: user.custodyAddress as `0x${string}`,
+          });
+          setTxCount(count);
+        } catch (e) {
+          console.error("Score fetch error:", e);
+        }
+      }
+    };
+    fetchScore();
+  }, [user, publicClient]);
 
   const calls = [
     {
@@ -104,9 +124,17 @@ export default function Page() {
             </div>
           )}
           
-          <h2 className="text-2xl font-extrabold mb-2">
+          <h2 className="text-2xl font-extrabold mb-1">
             {user ? `Welcome, ${user.username}` : "Hello, Builder"}
           </h2>
+
+          {/* BASE BUILD SCORE BLOCK */}
+          {txCount !== null && (
+            <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-1 mb-4 flex flex-col items-center animate-in fade-in slide-in-from-top-2 duration-700">
+              <span className="text-[9px] uppercase tracking-[0.2em] opacity-60 font-bold">Base Build Score</span>
+              <span className="text-xl font-mono font-bold text-blue-200">{txCount}</span>
+            </div>
+          )}
           
           <div className="space-y-4 mt-2">
             <p className="text-blue-50 text-md leading-relaxed">
@@ -141,7 +169,6 @@ export default function Page() {
                 <span className="opacity-50">↗</span>
               </button>
 
-              {/* Блок друзей - появится только когда массив topFriends заполнится */}
               {topFriends.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-white/10">
                   <p className="text-white/60 text-[10px] mb-4 text-center uppercase tracking-[0.2em] font-bold">
@@ -155,15 +182,14 @@ export default function Page() {
                         className="flex-shrink-0 flex flex-col items-center gap-1 group transition-transform active:scale-90"
                       >
                         <img 
-  src={friend.pfp_url} 
-  alt={friend.username}
-  className="w-12 h-12 rounded-full border-2 border-transparent group-hover:border-[#0052FF] transition-all object-cover"
-  onError={(e) => {
-    const target = e.target as HTMLImageElement;
-    // Если картинка не грузится, создаем красивую иконку с буквой имени
-    target.src = `https://ui-avatars.com/api/?name=${friend.username}&background=ffffff&color=0052FF`;
-  }}
-/>
+                          src={friend.pfp_url} 
+                          alt={friend.username}
+                          className="w-12 h-12 rounded-full border-2 border-transparent group-hover:border-[#0052FF] transition-all object-cover bg-white/5"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = `https://ui-avatars.com/api/?name=${friend.username}&background=ffffff&color=0052FF`;
+                          }}
+                        />
                         <span className="text-[10px] text-white/40 group-hover:text-white truncate w-14">
                           @{friend.username}
                         </span>
