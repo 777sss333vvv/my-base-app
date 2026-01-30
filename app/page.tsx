@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -51,14 +52,14 @@ export default function Page() {
         if (context?.user) {
           setUser(context.user);
           
-          // Загрузка друзей (наши герои)
+          // Загрузка наших героев (из твоего api/friends/route.ts)
           const res = await fetch(`/api/friends?fid=${context.user.fid}`);
           const friendsData = await res.json();
           if (Array.isArray(friendsData)) {
             setTopFriends(friendsData);
           }
 
-          // Авто-коннект кошелька Farcaster
+          // Авто-коннект кошелька
           const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
           if (farcasterConnector && !isConnected) {
             connect({ connector: farcasterConnector });
@@ -74,13 +75,16 @@ export default function Page() {
     load();
   }, [connectors, isConnected, connect]);
 
-  // Загрузка Onchain Score (транзакции)
+  // Загрузка Onchain Score (количество транзакций)
   useEffect(() => {
     const fetchScore = async () => {
-      if (user?.custodyAddress && publicClient) {
+      // Пытаемся взять адрес пользователя из контекста Farcaster
+      const address = user?.custodyAddress || user?.verifiedAddresses?.ethAddresses?.[0];
+      
+      if (address && publicClient) {
         try {
           const count = await publicClient.getTransactionCount({
-            address: user.custodyAddress as `0x${string}`,
+            address: address as `0x${string}`,
           });
           setTxCount(count);
         } catch (e) {
@@ -119,7 +123,7 @@ export default function Page() {
               className="w-20 h-20 rounded-full border-4 border-white/30 mb-4 shadow-xl"
             />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-white/20 mb-4 flex items-center justify-center text-3xl">
+            <div className="w-20 h-20 rounded-full bg-white/20 mb-4 flex items-center justify-center text-3xl font-bold">
               🏗️
             </div>
           )}
@@ -130,7 +134,7 @@ export default function Page() {
 
           {/* BASE BUILD SCORE BLOCK */}
           {txCount !== null && (
-            <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-1 mb-4 flex flex-col items-center animate-in fade-in slide-in-from-top-2 duration-700">
+            <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-1 mb-4 flex flex-col items-center animate-pulse shadow-inner">
               <span className="text-[9px] uppercase tracking-[0.2em] opacity-60 font-bold">Base Build Score</span>
               <span className="text-xl font-mono font-bold text-blue-200">{txCount}</span>
             </div>
