@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
@@ -60,7 +61,6 @@ export default function Page() {
             connect({ connector: farcasterConnector });
           }
 
-          // Вызываем ready() ТОЛЬКО если мы во Фрейме
           sdk.actions.ready();
         }
       } catch (error) {
@@ -81,7 +81,7 @@ export default function Page() {
             address: targetAddress as `0x${string}`,
           });
           setTxCount(count);
-        } catch (e) {
+        } catch {
           setTxCount(0);
         }
       } else if (isSDKLoaded) {
