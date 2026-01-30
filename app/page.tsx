@@ -5,10 +5,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
 import { 
   Transaction, 
-  TransactionButton,
-  TransactionStatus,
-  TransactionStatusLabel,
-  TransactionStatusAction
+  TransactionButton, 
+  TransactionStatus, 
+  TransactionStatusLabel, 
+  TransactionStatusAction 
 } from '@coinbase/onchainkit/transaction';
 import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
 import { useAccount, useConnect, usePublicClient } from 'wagmi';
@@ -22,7 +22,7 @@ export default function Page() {
   const [topFriends, setTopFriends] = useState<any[]>([]);
   const [txCount, setTxCount] = useState<number | null>(null);
 
-  const { isConnected } = useAccount();
+  const { isConnected, address: connectedAddress } = useAccount();
   const { connect, connectors } = useConnect();
   const publicClient = usePublicClient();
 
@@ -31,7 +31,6 @@ export default function Page() {
     const shareText = "I'm building onchain with Build Together! 🏗️ Join the movement on @base";
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
-    
     sdk.actions.openUrl(shareUrl);
   }, []);
 
@@ -40,11 +39,10 @@ export default function Page() {
     const shareText = `Hey @${friendUsername}, I'm already building onchain with Build Together! 🏗️🔵 Join me on @base.`;
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
-    
     sdk.actions.openUrl(shareUrl);
   }, []);
 
-  // Основная загрузка данных
+  // Загрузка контекста Farcaster и друзей
   useEffect(() => {
     const load = async () => {
       try {
@@ -52,14 +50,12 @@ export default function Page() {
         if (context?.user) {
           setUser(context.user);
           
-          // Загрузка наших героев (из твоего api/friends/route.ts)
           const res = await fetch(`/api/friends?fid=${context.user.fid}`);
           const friendsData = await res.json();
           if (Array.isArray(friendsData)) {
             setTopFriends(friendsData);
           }
 
-          // Авто-коннект кошелька
           const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
           if (farcasterConnector && !isConnected) {
             connect({ connector: farcasterConnector });
@@ -75,25 +71,32 @@ export default function Page() {
     load();
   }, [connectors, isConnected, connect]);
 
-  // Загрузка Onchain Score (количество транзакций)
+  // Загрузка Onchain Score
   useEffect(() => {
     const fetchScore = async () => {
-      // Пытаемся взять адрес пользователя из контекста Farcaster
-      const address = user?.custodyAddress || user?.verifiedAddresses?.ethAddresses?.[0];
-      
-      if (address && publicClient) {
+      // Пытаемся найти адрес: сначала подключенный кошелек, потом из контекста
+      const targetAddress = 
+        connectedAddress || 
+        user?.custodyAddress || 
+        user?.verifiedAddresses?.ethAddresses?.[0];
+
+      if (targetAddress && publicClient) {
         try {
           const count = await publicClient.getTransactionCount({
-            address: address as `0x${string}`,
+            address: targetAddress as `0x${string}`,
           });
           setTxCount(count);
         } catch (e) {
           console.error("Score fetch error:", e);
+          setTxCount(0);
         }
+      } else if (isSDKLoaded) {
+        // Если SDK загружен, но адрес всё еще не найден — ставим 0, чтобы не висел "..."
+        setTxCount(0);
       }
     };
     fetchScore();
-  }, [user, publicClient]);
+  }, [user, connectedAddress, publicClient, isSDKLoaded]);
 
   const calls = [
     {
@@ -132,13 +135,13 @@ export default function Page() {
             {user ? `Welcome, ${user.username}` : "Hello, Builder"}
           </h2>
 
-          {/* BASE BUILD SCORE BLOCK */}
-          {txCount !== null && (
-            <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-1 mb-4 flex flex-col items-center animate-pulse shadow-inner">
-              <span className="text-[9px] uppercase tracking-[0.2em] opacity-60 font-bold">Base Build Score</span>
-              <span className="text-xl font-mono font-bold text-blue-200">{txCount}</span>
-            </div>
-          )}
+          {/* BASE BUILD SCORE BLOCK - ВИДЕН ВСЕГДА */}
+          <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-1 mb-4 flex flex-col items-center shadow-inner min-w-[140px]">
+            <span className="text-[9px] uppercase tracking-[0.2em] opacity-60 font-bold">Base Build Score</span>
+            <span className="text-xl font-mono font-bold text-blue-200">
+              {txCount !== null ? txCount : "..."}
+            </span>
+          </div>
           
           <div className="space-y-4 mt-2">
             <p className="text-blue-50 text-md leading-relaxed">
