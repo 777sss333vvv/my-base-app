@@ -74,7 +74,6 @@ export default function Page() {
   // Загрузка Onchain Score
   useEffect(() => {
     const fetchScore = async () => {
-      // Пытаемся найти адрес: сначала подключенный кошелек, потом из контекста
       const targetAddress = 
         connectedAddress || 
         user?.custodyAddress || 
@@ -91,7 +90,6 @@ export default function Page() {
           setTxCount(0);
         }
       } else if (isSDKLoaded) {
-        // Если SDK загружен, но адрес всё еще не найден — ставим 0, чтобы не висел "..."
         setTxCount(0);
       }
     };
@@ -135,11 +133,16 @@ export default function Page() {
             {user ? `Welcome, ${user.username}` : "Hello, Builder"}
           </h2>
 
-          {/* BASE BUILD SCORE BLOCK - ВИДЕН ВСЕГДА */}
-          <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-1 mb-4 flex flex-col items-center shadow-inner min-w-[140px]">
-            <span className="text-[9px] uppercase tracking-[0.2em] opacity-60 font-bold">Base Build Score</span>
-            <span className="text-xl font-mono font-bold text-blue-200">
+          {/* BASE ACTIVITY SCORE BLOCK */}
+          <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 mb-4 flex flex-col items-center shadow-inner min-w-[140px]">
+            <span className="text-[9px] uppercase tracking-[0.2em] opacity-60 font-bold text-blue-100">
+              Base Activity Score
+            </span>
+            <span className="text-2xl font-mono font-extrabold text-white my-1">
               {txCount !== null ? txCount : "..."}
+            </span>
+            <span className="text-[8px] opacity-40 uppercase tracking-widest font-medium">
+              Total Transactions
             </span>
           </div>
           
