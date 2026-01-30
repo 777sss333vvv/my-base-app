@@ -44,27 +44,30 @@ export default function Page() {
   useEffect(() => {
     const load = async () => {
       try {
-        const context = await sdk.context;
-        const isFrame = !!(context?.client as any)?.clientApp;
+        // Сигнализируем о готовности сразу (нужно для Farcaster)
+        sdk.actions.ready();
 
-        if (isFrame && context?.user) {
+        const context = await sdk.context;
+        if (context?.user) {
           setUser(context.user);
           
-          const res = await fetch(`/api/friends?fid=${context.user.fid}`);
-          const friendsData = await res.json();
-          if (Array.isArray(friendsData)) {
-            setTopFriends(friendsData);
+          try {
+            const res = await fetch(`/api/friends?fid=${context.user.fid}`);
+            if (res.ok) {
+              const friendsData = await res.json();
+              setTopFriends(Array.isArray(friendsData) ? friendsData : []);
+            }
+          } catch (fErr) {
+            console.error("Friends fetch failed:", fErr);
           }
 
           const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
           if (farcasterConnector && !isConnected) {
             connect({ connector: farcasterConnector });
           }
-
-          sdk.actions.ready();
         }
       } catch (error) {
-        console.warn("Non-frame environment or SDK error:", error);
+        console.warn("Farcaster SDK environment check finished.");
       } finally {
         setIsSDKLoaded(true);
       }
