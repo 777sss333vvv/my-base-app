@@ -3,18 +3,19 @@ import './globals.css';
 import { RootProvider } from './rootProvider';
 
 export const metadata: Metadata = {
-  title: 'Build Together',
-  description: 'My first onchain application on Base',
+  title: 'Prosperity Pass',
+  description: 'Your ultimate gateway to the Base ecosystem',
   other: {
+    'base:app_id': '697e512e2aafa0bc9ad8a312',
     'fc:frame': JSON.stringify({
       version: "next",
-      imageUrl: `https://my-base-app.vercel.app/og-image.png`, 
+      imageUrl: `https://www.prosperitypass.xyz/og-image.png`, 
       button: {
         title: "Launch App",
         action: {
           type: "launch_frame",
-          name: "Build Together",
-          url: `https://my-base-app.vercel.app/`, 
+          name: "Prosperity Pass",
+          url: `https://www.prosperitypass.xyz/`, 
         },
       },
     }),
