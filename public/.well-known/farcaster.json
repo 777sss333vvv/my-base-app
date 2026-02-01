@@ -14,8 +14,10 @@
     "splashImageUrl": "https://www.prosperitypass.xyz/splash.png",
     "splashBackgroundColor": "#0052FF",
     "description": "Join the movement of solo builders on Base. Support the community with an onchain check-in.",
+    "primaryCategory": "utility",
+    "tags": ["base", "score", "builder", "reputation", "og"],
     "screenshots": [
       "https://www.prosperitypass.xyz/screenshot1.png"
     ]
-    }
-}
+  }
+  }
