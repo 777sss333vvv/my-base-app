@@ -122,7 +122,7 @@ export default function Page() {
             <button 
               onClick={getNewProphecy}
               className="absolute -top-4 -right-6 w-14 h-14 bg-blue-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center animate-bounce hover:scale-110 transition-transform overflow-hidden"
-              style={{ ["--animation-duration" as any]: '3s', animationDuration: '3s' }}
+              style={{ animationDuration: '3s' } as any}
             >
               <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
             </button>
@@ -150,17 +150,18 @@ export default function Page() {
           </button>
 
           <div className="flex-[2] relative">
-            <Transaction chainId={8453} calls={[{
-              to: MY_WALLET_ADDRESS as `0x${string}`,
-              value: BigInt(35000000000000),
-              data: '0x' as `0x${string}`
-            } as any]}>
-              <TransactionButton 
-                className="w-full bg-indigo-600 text-white font-black py-3 rounded-xl text-[10px] uppercase shadow-xl border-none animate-bounce" 
-                style={{ ["--animation-duration" as any]: '3s', animationDuration: '3s' }}
-                text="Weekly Drop Entry 🎁" 
-              />
-            </Transaction>
+            <div className="animate-bounce" style={{ animationDuration: '3s' } as any}>
+              <Transaction chainId={8453} calls={[{
+                to: MY_WALLET_ADDRESS as `0x${string}`,
+                value: BigInt(35000000000000),
+                data: '0x' as `0x${string}`
+              } as any]}>
+                <TransactionButton 
+                  className="w-full bg-indigo-600 text-white font-black py-3 rounded-xl text-[10px] uppercase shadow-xl border-none" 
+                  text="Weekly Drop Entry 🎁" 
+                />
+              </Transaction>
+            </div>
             <p className="text-[7px] text-center mt-1 opacity-50 uppercase font-bold tracking-tighter">
               Get 2x-3x Drop every Sunday
             </p>
