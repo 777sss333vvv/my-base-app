@@ -28,6 +28,25 @@ export default function Page() {
 
   const currentTier = getTier(txCount || 0);
 
+  // Загрузка транзакций Alchemy
+  useEffect(() => {
+    async function fetchAlchemyData() {
+      const targetAddress = connectedAddress || user?.custodyAddress;
+      if (targetAddress) {
+        setIsLoadingTx(true);
+        try {
+          const data = await getRecentTransactions(targetAddress);
+          setTransactions(data || []);
+        } catch (err) {
+          console.error("Alchemy error:", err);
+        } finally {
+          setIsLoadingTx(false);
+        }
+      }
+    }
+    fetchAlchemyData();
+  }, [connectedAddress, user]);
+
   const prophecies = useMemo(() => [
     "The Oracle rewards the bold. Enter the Weekly Drop to seal your fate! 💎",
     "On-chain destiny is written in Base. Your support fuels the wisdom. 🔵",
@@ -52,6 +71,10 @@ export default function Page() {
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
     sdk.actions.openUrl(shareUrl);
   }, [currentTier, oracleMessage]);
+
+  const handleBuyNow = () => {
+    sdk.actions.openUrl('https://zora.co/collect/base:0x7ee27f16e32e7070d353fd3fe9e4428a69701f31');
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -88,6 +111,7 @@ export default function Page() {
 
       <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
         
+        {/* АВАТАР И ОРАКУЛ */}
         <div className="flex flex-col items-center text-center relative mb-6">
           <div className="relative">
             {user?.pfpUrl ? (
@@ -95,7 +119,6 @@ export default function Page() {
             ) : (
               <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-3xl font-mono">?</div>
             )}
-            
             <button 
               onClick={getNewProphecy}
               className="absolute -top-4 -right-6 w-14 h-14 bg-blue-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center animate-bounce hover:scale-110 transition-transform overflow-hidden"
@@ -104,7 +127,6 @@ export default function Page() {
               <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
             </button>
           </div>
-          
           <h2 className="text-xl font-black mt-4">{user ? `@${user.username}` : "Base Builder"}</h2>
 
           <div className="mt-4 bg-black/40 p-3 rounded-2xl border border-blue-400/50 relative min-h-[70px] flex items-center justify-center">
@@ -117,23 +139,24 @@ export default function Page() {
           </div>
         </div>
 
+        {/* КНОПКИ ДЕЙСТВИЯ */}
         <div className="flex gap-2 mb-6">
           <button 
-            onClick={() => sdk.actions.openUrl('https://zora.co/collect/base:0x7ee27f16e32e7070d353fd3fe9e4428a69701f31')}
-            className="flex-[1] bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl flex flex-col items-center justify-center p-2 transition-all group"
+            onClick={handleBuyNow}
+            className="flex-[1] bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl flex flex-col items-center justify-center p-2 transition-all"
           >
             <img src={TOKEN_IMAGE} className="w-6 h-6 rounded-full mb-1" alt="Token" />
-            <span className="text-[8px] font-black uppercase">Buy Now</span>
+            <span className="text-[8px] font-black uppercase">Buy Token</span>
           </button>
 
-          <div className="flex-[2]">
+          <div className="flex-[2] relative group">
             <Transaction chainId={8453} calls={[{
               to: MY_WALLET_ADDRESS as `0x${string}`,
               value: BigInt(35000000000000),
               data: '0x' as `0x${string}`
             } as any]}>
               <TransactionButton 
-                className="w-full bg-indigo-600 text-white font-black py-3 rounded-xl text-[10px] uppercase shadow-xl border-none" 
+                className="w-full bg-indigo-600 text-white font-black py-3 rounded-xl text-[10px] uppercase shadow-xl border-none animate-pulse hover:animate-none" 
                 text="Weekly Drop Entry 🎁" 
               />
             </Transaction>
@@ -143,6 +166,7 @@ export default function Page() {
           </div>
         </div>
 
+        {/* СТАТИСТИКА */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="bg-black/20 rounded-2xl py-3 border border-white/5 text-center">
             <p className="text-[8px] uppercase opacity-50 mb-1 tracking-widest font-bold">Base Score</p>
@@ -154,13 +178,35 @@ export default function Page() {
           </div>
         </div>
 
-        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs shadow-xl mb-4 hover:scale-[1.02] active:scale-95 transition-all">
+        {/* ЛОГ ТРАНЗАКЦИЙ ALCHEMY */}
+        <div className="mb-6 bg-black/20 rounded-3xl p-4 border border-white/5">
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-3">Live Onchain Activity</p>
+          <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1">
+            {isLoadingTx ? (
+              <div className="text-[10px] text-white/30 text-center py-4 animate-pulse italic">Scanning ledger...</div>
+            ) : transactions.length > 0 ? (
+              transactions.slice(0, 5).map((tx: any, i: number) => (
+                <div key={i} className="bg-white/5 border border-white/5 p-2 rounded-xl flex justify-between items-center text-[9px]">
+                  <div className="flex items-center gap-2">
+                    <span className="opacity-50">{tx.asset === 'ETH' ? '🔵' : '📦'}</span>
+                    <p className="font-bold opacity-80">{tx.category === 'erc721' ? 'NFT Mint' : 'Transfer'}</p>
+                  </div>
+                  <p className="font-mono text-blue-400">{parseFloat(tx.value).toFixed(4)} {tx.asset}</p>
+                </div>
+              ))
+            ) : (
+              <div className="text-[10px] text-white/20 text-center py-4">No recent activity found</div>
+            )}
+          </div>
+        </div>
+
+        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs shadow-xl mb-4 hover:scale-[1.02] transition-all">
           Share My Prophecy ↗
         </button>
 
-        <footer className="text-center">
+        <footer className="text-center pb-2">
            <p className="text-[7px] text-white/30 uppercase tracking-[0.3em] font-bold">
-             Oracle v1.0 • Built for the Base Community
+             Oracle v1.1 • Stability Update
            </p>
         </footer>
       </main>
