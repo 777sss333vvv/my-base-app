@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use strict';
+'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
