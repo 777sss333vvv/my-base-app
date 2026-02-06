@@ -122,12 +122,12 @@ export default function Page() {
             <button 
               onClick={getNewProphecy}
               className="absolute -top-4 -right-6 w-14 h-14 bg-blue-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center animate-bounce hover:scale-110 transition-transform overflow-hidden"
-              style={{ animationDuration: '3s' }}
+              style={{ ["--animation-duration" as any]: '3s', animationDuration: '3s' }}
             >
               <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
             </button>
           </div>
-          <h2 className="text-xl font-black mt-4">{user ? `@${user.username}` : "Base Builder"}</h2>
+          <h2 className="text-xl font-black mt-4 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
 
           <div className="mt-4 bg-black/40 p-3 rounded-2xl border border-blue-400/50 relative min-h-[70px] flex items-center justify-center">
             <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-500 text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest shadow-blue-500/50 shadow-lg">
@@ -140,23 +140,24 @@ export default function Page() {
         </div>
 
         {/* КНОПКИ ДЕЙСТВИЯ */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-4">
           <button 
             onClick={handleBuyNow}
             className="flex-[1] bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl flex flex-col items-center justify-center p-2 transition-all"
           >
-            <img src={TOKEN_IMAGE} className="w-6 h-6 rounded-full mb-1" alt="Token" />
-            <span className="text-[8px] font-black uppercase">Buy Token</span>
+            <img src={TOKEN_IMAGE} className="w-5 h-5 rounded-full mb-1" alt="Token" />
+            <span className="text-[7px] font-black uppercase text-center leading-tight">Buy $USERBOX <br/> on Zora</span>
           </button>
 
-          <div className="flex-[2] relative group">
+          <div className="flex-[2] relative">
             <Transaction chainId={8453} calls={[{
               to: MY_WALLET_ADDRESS as `0x${string}`,
               value: BigInt(35000000000000),
               data: '0x' as `0x${string}`
             } as any]}>
               <TransactionButton 
-                className="w-full bg-indigo-600 text-white font-black py-3 rounded-xl text-[10px] uppercase shadow-xl border-none animate-pulse hover:animate-none" 
+                className="w-full bg-indigo-600 text-white font-black py-3 rounded-xl text-[10px] uppercase shadow-xl border-none animate-bounce" 
+                style={{ ["--animation-duration" as any]: '3s', animationDuration: '3s' }}
                 text="Weekly Drop Entry 🎁" 
               />
             </Transaction>
@@ -166,8 +167,8 @@ export default function Page() {
           </div>
         </div>
 
-        {/* СТАТИСТИКА */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        {/* SCORE И РАНГ */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-black/20 rounded-2xl py-3 border border-white/5 text-center">
             <p className="text-[8px] uppercase opacity-50 mb-1 tracking-widest font-bold">Base Score</p>
             <p className="text-xl font-mono font-black">{txCount ?? "..."}</p>
@@ -178,35 +179,39 @@ export default function Page() {
           </div>
         </div>
 
-        {/* ЛОГ ТРАНЗАКЦИЙ ALCHEMY */}
-        <div className="mb-6 bg-black/20 rounded-3xl p-4 border border-white/5">
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-3">Live Onchain Activity</p>
-          <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1">
+        {/* ШЕЙРИНГ */}
+        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs shadow-xl mb-6 hover:scale-[1.02] active:scale-95 transition-all">
+          Share My Prophecy ↗
+        </button>
+
+        {/* ЛОГ ALCHEMY */}
+        <div className="mb-4 bg-black/20 rounded-3xl p-4 border border-white/5">
+          <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/40 mb-3 flex justify-between">
+            <span>Live Onchain Activity</span>
+            <span className="opacity-60 text-blue-400">by Alchemy</span>
+          </p>
+          <div className="space-y-2 max-h-[100px] overflow-y-auto pr-1">
             {isLoadingTx ? (
               <div className="text-[10px] text-white/30 text-center py-4 animate-pulse italic">Scanning ledger...</div>
             ) : transactions.length > 0 ? (
-              transactions.slice(0, 5).map((tx: any, i: number) => (
+              transactions.slice(0, 3).map((tx: any, i: number) => (
                 <div key={i} className="bg-white/5 border border-white/5 p-2 rounded-xl flex justify-between items-center text-[9px]">
                   <div className="flex items-center gap-2">
-                    <span className="opacity-50">{tx.asset === 'ETH' ? '🔵' : '📦'}</span>
-                    <p className="font-bold opacity-80">{tx.category === 'erc721' ? 'NFT Mint' : 'Transfer'}</p>
+                    <span className="opacity-50 text-[10px]">{tx.asset === 'ETH' ? '🔵' : '📦'}</span>
+                    <p className="font-bold opacity-80 uppercase">{tx.category === 'erc721' ? 'NFT' : 'Tx'}</p>
                   </div>
-                  <p className="font-mono text-blue-400">{parseFloat(tx.value).toFixed(4)} {tx.asset}</p>
+                  <p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)} {tx.asset}</p>
                 </div>
               ))
             ) : (
-              <div className="text-[10px] text-white/20 text-center py-4">No recent activity found</div>
+              <div className="text-[10px] text-white/20 text-center py-4">No recent activity</div>
             )}
           </div>
         </div>
 
-        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs shadow-xl mb-4 hover:scale-[1.02] transition-all">
-          Share My Prophecy ↗
-        </button>
-
         <footer className="text-center pb-2">
            <p className="text-[7px] text-white/30 uppercase tracking-[0.3em] font-bold">
-             Oracle v1.1 • Stability Update
+             Oracle v1.2 • Enhanced UI
            </p>
         </footer>
       </main>
