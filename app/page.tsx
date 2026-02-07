@@ -28,7 +28,6 @@ export default function Page() {
 
   const currentTier = getTier(txCount || 0);
 
-  // Загрузка транзакций Alchemy
   useEffect(() => {
     async function fetchAlchemyData() {
       const targetAddress = connectedAddress || user?.custodyAddress;
@@ -146,7 +145,9 @@ export default function Page() {
             className="flex-[1] bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl flex flex-col items-center justify-center p-2 transition-all"
           >
             <img src={TOKEN_IMAGE} className="w-5 h-5 rounded-full mb-1" alt="Token" />
-            <span className="text-[7px] font-black uppercase text-center leading-tight">Buy $USERBOX <br/> on Zora</span>
+            <span className="text-[7px] font-black uppercase text-center leading-tight">
+              Buy $USERBOX <br/> on Zora ↗
+            </span>
           </button>
 
           <div className="flex-[2] relative">
@@ -189,7 +190,7 @@ export default function Page() {
         <div className="mb-4 bg-black/20 rounded-3xl p-4 border border-white/5">
           <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/40 mb-3 flex justify-between">
             <span>Live Onchain Activity</span>
-            <span className="opacity-60 text-blue-400">by Alchemy</span>
+            <span className="opacity-60 text-blue-400 font-bold">by Alchemy</span>
           </p>
           <div className="space-y-2 max-h-[100px] overflow-y-auto pr-1">
             {isLoadingTx ? (
@@ -211,8 +212,8 @@ export default function Page() {
         </div>
 
         <footer className="text-center pb-2">
-           <p className="text-[7px] text-white/30 uppercase tracking-[0.3em] font-bold">
-             Oracle v1.2 • Enhanced UI
+           <p className="text-[7px] text-white/40 uppercase tracking-[0.3em] font-bold">
+             Powered by Base • Solo Building
            </p>
         </footer>
       </main>
