@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
 import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
@@ -18,12 +18,15 @@ const TOKEN_IMAGE = "/oracle.png";
 export default function Page() {
   const [user, setUser] = useState<any>(null);
   const [txCount, setTxCount] = useState<number | null>(null);
-  const [oracleScore, setOracleScore] = useState<number>(1250); 
+  const [oracleScore, setOracleScore] = useState<number>(1250); // Set to 0 if you want to start from scratch
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoadingTx, setIsLoadingTx] = useState(false);
   const [oracleMessage, setOracleMessage] = useState("Tap the Oracle and get a prophecy");
   const [isOracleLoading, setIsOracleLoading] = useState(false);
   const [lastChoice, setLastChoice] = useState<'accept' | 'defy' | null>(null);
+  
+  // Ref to prevent infinite score increments during a single transaction lifecycle
+  const isUpdatingScore = useRef(false);
 
   const { isConnected, address: connectedAddress } = useAccount();
   const { connect, connectors } = useConnect();
@@ -31,7 +34,6 @@ export default function Page() {
 
   const currentTier = getTier(txCount || 0);
 
-  // Список из 50 предсказаний (только английский)
   const prophecies = useMemo(() => [
     "The charts whisper green. Patience is your strongest shield.",
     "A red candle is not the end, but a test of your faith.",
@@ -94,7 +96,6 @@ export default function Page() {
     }, 600);
   };
 
-  // Логика Share (текст теперь полностью на английском)
   const handleShare = useCallback(() => {
     let intro = "";
     if (lastChoice === 'accept') {
@@ -110,6 +111,20 @@ export default function Page() {
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
+
+  // Handle Score Update - Fixed to prevent infinite loop
+  const handleScoreUpdate = (choice: 'accept' | 'defy') => {
+    if (!isUpdatingScore.current) {
+      isUpdatingScore.current = true;
+      setOracleScore(prev => prev + 100);
+      setLastChoice(choice);
+      
+      // Reset the lock after a timeout to allow future transactions
+      setTimeout(() => {
+        isUpdatingScore.current = false;
+      }, 5000);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -154,7 +169,6 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-[#0052FF] text-white flex flex-col items-center p-4 font-sans overflow-x-hidden">
-      {/* Анимация синхронизации Оракула и кнопок */}
       <style jsx global>{`
         @keyframes floatSync {
           0%, 100% { transform: translateY(0px); }
@@ -172,7 +186,6 @@ export default function Page() {
 
       <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
         
-        {/* Аватар и Голова Оракула */}
         <div className="flex flex-col items-center text-center relative mb-4">
           <div className="relative">
             {user?.pfpUrl ? (
@@ -190,7 +203,6 @@ export default function Page() {
           <h2 className="text-xl font-black mt-4 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
         </div>
 
-        {/* Окно предсказаний (на всю ширину) */}
         <div className="mb-6 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[100px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
           <div className="absolute -top-2.5 left-6 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">
             Oracle Prophecy
@@ -200,13 +212,12 @@ export default function Page() {
           </p>
         </div>
 
-        {/* Две одинаковые кнопки */}
         <div className="flex gap-3 mb-6">
           <div className="flex-1 animate-oracle-sync" style={{ animationDelay: '0.2s' }}>
             <Transaction 
               chainId={8453} 
               calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
-              onStatus={(s: any) => { if (s.statusName === 'success') { setOracleScore(p => p + 100); setLastChoice('accept'); }}}
+              onStatus={(s: any) => { if (s.statusName === 'success') handleScoreUpdate('accept'); }}
             >
               <TransactionButton 
                 className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF] shadow-[0_0_10px_rgba(255,0,255,0.3)] hover:scale-105 transition-transform" 
@@ -219,7 +230,7 @@ export default function Page() {
             <Transaction 
               chainId={8453} 
               calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
-              onStatus={(s: any) => { if (s.statusName === 'success') { setOracleScore(p => p + 100); setLastChoice('defy'); }}}
+              onStatus={(s: any) => { if (s.statusName === 'success') handleScoreUpdate('defy'); }}
             >
               <TransactionButton 
                 className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF] shadow-[0_0_10px_rgba(0,82,255,0.3)] hover:scale-105 transition-transform" 
@@ -229,7 +240,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Блок со скорами */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center shadow-inner">
             <p className="text-[9px] uppercase opacity-50 mb-1 tracking-widest font-bold">Base Score</p>
@@ -241,7 +251,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Кнопка Share */}
         <button 
           onClick={handleShare} 
           className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs shadow-xl mb-4 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-tighter"
@@ -253,7 +262,6 @@ export default function Page() {
           Hold $USERBOX to boost your Oracle Score
         </p>
 
-        {/* Секция Alchemy Activity */}
         <div className="mb-4 bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
           <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/40 mb-4 flex justify-between items-center">
             <span>Live Onchain Activity</span>
