@@ -30,7 +30,7 @@ export default function Page() {
   const { connect, connectors } = useConnect();
   const publicClient = usePublicClient();
 
-  // Persistence: Load score from localStorage
+  // Load from localStorage
   useEffect(() => {
     const savedScore = localStorage.getItem('oracle_score_v5');
     if (savedScore) {
@@ -38,7 +38,7 @@ export default function Page() {
     }
   }, []);
 
-  // Persistence: Save score to localStorage
+  // Save to localStorage
   useEffect(() => {
     localStorage.setItem('oracle_score_v5', oracleScore.toString());
   }, [oracleScore]);
@@ -192,25 +192,28 @@ export default function Page() {
 
       <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
         
+        {/* Аватар и Оракул (Сдвинут влево) */}
         <div className="flex flex-col items-center text-center relative mb-8">
-          <div className="relative">
+          <div className="relative flex items-center justify-center">
+            {/* Oracle Logo: Positioned LEFT now */}
+            <button 
+              onClick={getNewProphecy}
+              className="absolute -left-20 top-2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-transform overflow-hidden z-10"
+              style={{ width: '4.5rem', height: '4.5rem' }} 
+            >
+              <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
+            </button>
+
             {user?.pfpUrl ? (
               <img src={user.pfpUrl} alt="PFP" className="w-20 h-20 rounded-full border-4 border-white/30 shadow-xl" />
             ) : (
               <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-3xl font-mono">?</div>
             )}
-            {/* Oracle Logo: Increased by 20% (w-14 -> w-17), moved lower (-top-4 -> top-12) */}
-            <button 
-              onClick={getNewProphecy}
-              className="absolute top-12 -right-8 w-17 h-17 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-transform overflow-hidden z-10"
-              style={{ width: '4.25rem', height: '4.25rem' }} 
-            >
-              <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
-            </button>
           </div>
           <h2 className="text-xl font-black mt-4 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
         </div>
 
+        {/* Остальные блоки без изменений */}
         <div className="mb-6 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[100px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
           <div className="absolute -top-2.5 left-6 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">
             Oracle Prophecy
