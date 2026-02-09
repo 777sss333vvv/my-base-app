@@ -102,8 +102,9 @@ export default function Page() {
     }, 600);
   };
 
-  const handleShare = useCallback(() => {
-    let intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
+const handleShare = useCallback(() => {
+    // Исправлено: используем const, так как переменная не переназначается ниже
+    const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                : lastChoice === 'defy' ? `⚔️ I defy my fate! The prophecy was: "${oracleMessage}"`
                : `🔮 My Oracle Prophecy: "${oracleMessage}"`;
 
