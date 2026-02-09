@@ -30,15 +30,12 @@ export default function Page() {
   const { connect, connectors } = useConnect();
   const publicClient = usePublicClient();
 
-  // Load from localStorage
+  // Score Persistence
   useEffect(() => {
     const savedScore = localStorage.getItem('oracle_score_v5');
-    if (savedScore) {
-      setOracleScore(Number(savedScore));
-    }
+    if (savedScore) setOracleScore(Number(savedScore));
   }, []);
 
-  // Save to localStorage
   useEffect(() => {
     localStorage.setItem('oracle_score_v5', oracleScore.toString());
   }, [oracleScore]);
@@ -106,14 +103,9 @@ export default function Page() {
   };
 
   const handleShare = useCallback(() => {
-    let intro = "";
-    if (lastChoice === 'accept') {
-      intro = `🔮 I accept the Oracle's prophecy: "${oracleMessage}"`;
-    } else if (lastChoice === 'defy') {
-      intro = `⚔️ I defy my fate! The prophecy was: "${oracleMessage}"`;
-    } else {
-      intro = `🔮 My Oracle Prophecy: "${oracleMessage}"`;
-    }
+    let intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
+               : lastChoice === 'defy' ? `⚔️ I defy my fate! The prophecy was: "${oracleMessage}"`
+               : `🔮 My Oracle Prophecy: "${oracleMessage}"`;
 
     const shareText = `${intro}\n\n🛡️ Base Score: ${txCount}\n✨ Oracle Score: ${oracleScore}\n\nWhat choice would you make?`;
     const targetUrl = "https://www.prosperitypass.xyz";
@@ -126,9 +118,7 @@ export default function Page() {
       isUpdatingScore.current = true;
       setOracleScore(prev => prev + 100);
       setLastChoice(choice);
-      setTimeout(() => {
-        isUpdatingScore.current = false;
-      }, 5000);
+      setTimeout(() => { isUpdatingScore.current = false; }, 5000);
     }
   };
 
@@ -192,18 +182,9 @@ export default function Page() {
 
       <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
         
-        {/* Аватар и Оракул (Сдвинут влево) */}
-        <div className="flex flex-col items-center text-center relative mb-8">
-          <div className="relative flex items-center justify-center">
-            {/* Oracle Logo: Positioned LEFT now */}
-            <button 
-              onClick={getNewProphecy}
-              className="absolute -left-20 top-2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-transform overflow-hidden z-10"
-              style={{ width: '4.5rem', height: '4.5rem' }} 
-            >
-              <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
-            </button>
-
+        {/* User Avatar - Now Clean and Centered */}
+        <div className="flex flex-col items-center text-center mb-10">
+          <div className="relative">
             {user?.pfpUrl ? (
               <img src={user.pfpUrl} alt="PFP" className="w-20 h-20 rounded-full border-4 border-white/30 shadow-xl" />
             ) : (
@@ -213,12 +194,23 @@ export default function Page() {
           <h2 className="text-xl font-black mt-4 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
         </div>
 
-        {/* Остальные блоки без изменений */}
-        <div className="mb-6 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[100px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
-          <div className="absolute -top-2.5 left-6 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">
+        {/* Oracle Prophecy Board - Now includes the Oracle Logo */}
+        <div className="mb-6 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
+          
+          {/* Oracle Logo - Integrated with the Board */}
+          <button 
+            onClick={getNewProphecy}
+            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all overflow-hidden z-20"
+            style={{ width: '4.8rem', height: '4.8rem' }} 
+          >
+            <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
+          </button>
+
+          <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">
             Oracle Prophecy
           </div>
-          <p className={`text-sm italic font-medium px-2 leading-relaxed text-center ${isOracleLoading ? 'animate-pulse opacity-50' : ''}`}>
+          
+          <p className={`text-sm italic font-medium pl-8 pr-2 leading-relaxed text-center ${isOracleLoading ? 'animate-pulse opacity-50' : ''}`}>
             &quot;{oracleMessage}&quot;
           </p>
         </div>
