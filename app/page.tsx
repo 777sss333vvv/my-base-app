@@ -11,28 +11,37 @@ import { useAccount, useConnect, usePublicClient } from 'wagmi';
 import { getTier } from '../utils/scoreLogic'; 
 import { getRecentTransactions } from './alchemy'; 
 
-// Адрес кошелька и изображение Оракула
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
 export default function Page() {
   const [user, setUser] = useState<any>(null);
   const [txCount, setTxCount] = useState<number | null>(null);
-  const [oracleScore, setOracleScore] = useState<number>(1250); // Set to 0 if you want to start from scratch
+  const [oracleScore, setOracleScore] = useState<number>(1250); 
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoadingTx, setIsLoadingTx] = useState(false);
   const [oracleMessage, setOracleMessage] = useState("Tap the Oracle and get a prophecy");
   const [isOracleLoading, setIsOracleLoading] = useState(false);
   const [lastChoice, setLastChoice] = useState<'accept' | 'defy' | null>(null);
   
-  // Ref to prevent infinite score increments during a single transaction lifecycle
   const isUpdatingScore = useRef(false);
 
   const { isConnected, address: connectedAddress } = useAccount();
   const { connect, connectors } = useConnect();
   const publicClient = usePublicClient();
 
-  const currentTier = getTier(txCount || 0);
+  // Persistence: Load score from localStorage
+  useEffect(() => {
+    const savedScore = localStorage.getItem('oracle_score_v5');
+    if (savedScore) {
+      setOracleScore(Number(savedScore));
+    }
+  }, []);
+
+  // Persistence: Save score to localStorage
+  useEffect(() => {
+    localStorage.setItem('oracle_score_v5', oracleScore.toString());
+  }, [oracleScore]);
 
   const prophecies = useMemo(() => [
     "The charts whisper green. Patience is your strongest shield.",
@@ -112,14 +121,11 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-  // Handle Score Update - Fixed to prevent infinite loop
   const handleScoreUpdate = (choice: 'accept' | 'defy') => {
     if (!isUpdatingScore.current) {
       isUpdatingScore.current = true;
       setOracleScore(prev => prev + 100);
       setLastChoice(choice);
-      
-      // Reset the lock after a timeout to allow future transactions
       setTimeout(() => {
         isUpdatingScore.current = false;
       }, 5000);
@@ -186,16 +192,18 @@ export default function Page() {
 
       <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
         
-        <div className="flex flex-col items-center text-center relative mb-4">
+        <div className="flex flex-col items-center text-center relative mb-8">
           <div className="relative">
             {user?.pfpUrl ? (
               <img src={user.pfpUrl} alt="PFP" className="w-20 h-20 rounded-full border-4 border-white/30 shadow-xl" />
             ) : (
               <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-3xl font-mono">?</div>
             )}
+            {/* Oracle Logo: Increased by 20% (w-14 -> w-17), moved lower (-top-4 -> top-12) */}
             <button 
               onClick={getNewProphecy}
-              className="absolute -top-4 -right-6 w-14 h-14 bg-blue-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center animate-oracle-sync hover:scale-110 transition-transform overflow-hidden z-10"
+              className="absolute top-12 -right-8 w-17 h-17 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-transform overflow-hidden z-10"
+              style={{ width: '4.25rem', height: '4.25rem' }} 
             >
               <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
             </button>
