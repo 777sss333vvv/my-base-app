@@ -30,7 +30,6 @@ export default function Page() {
   const { connect, connectors } = useConnect();
   const publicClient = usePublicClient();
 
-  // Score Persistence
   useEffect(() => {
     const savedScore = localStorage.getItem('oracle_score_v5');
     if (savedScore) setOracleScore(Number(savedScore));
@@ -102,8 +101,7 @@ export default function Page() {
     }, 600);
   };
 
-const handleShare = useCallback(() => {
-    // Исправлено: используем const, так как переменная не переназначается ниже
+  const handleShare = useCallback(() => {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                : lastChoice === 'defy' ? `⚔️ I defy my fate! The prophecy was: "${oracleMessage}"`
                : `🔮 My Oracle Prophecy: "${oracleMessage}"`;
@@ -171,34 +169,51 @@ const handleShare = useCallback(() => {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-8px); }
         }
+        @keyframes bounceHorizontal {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(-10px); }
+        }
         .animate-oracle-sync {
           animation: floatSync 3s ease-in-out infinite;
         }
+        .animate-bounce-horizontal {
+          animation: bounceHorizontal 1s infinite;
+        }
       `}</style>
 
-      <header className="w-full max-w-md flex justify-between items-center mb-6 px-2">
+      <header className="w-full max-w-md flex justify-between items-center mb-4 px-2">
         <h1 className="text-sm font-black tracking-tighter italic opacity-80 uppercase">Score 5.0: Oracle</h1>
         <div className="scale-75 origin-right"><Wallet><ConnectWallet className="bg-white text-[#0052FF]" /></Wallet></div>
       </header>
 
       <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
         
-        {/* User Avatar - Now Clean and Centered */}
-        <div className="flex flex-col items-center text-center mb-10">
+        {/* User Avatar */}
+        <div className="flex flex-col items-center text-center mb-6">
           <div className="relative">
             {user?.pfpUrl ? (
-              <img src={user.pfpUrl} alt="PFP" className="w-20 h-20 rounded-full border-4 border-white/30 shadow-xl" />
+              <img src={user.pfpUrl} alt="PFP" className="w-16 h-16 rounded-full border-4 border-white/30 shadow-xl" />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-3xl font-mono">?</div>
+              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-mono">?</div>
             )}
           </div>
-          <h2 className="text-xl font-black mt-4 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
+          <h2 className="text-lg font-black mt-2 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
         </div>
 
-        {/* Oracle Prophecy Board - Now includes the Oracle Logo */}
-        <div className="mb-6 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
+        {/* --- HOW TO PLAY SECTION --- */}
+        <div className="flex flex-col items-center mb-4 space-y-1">
+          <p className="text-[10px] font-black text-purple-300 uppercase tracking-[0.2em] animate-pulse">
+            🔮 How to play:
+          </p>
+          <div className="flex items-center gap-2 bg-black/20 px-4 py-1.5 rounded-full border border-white/10">
+            <p className="text-[11px] font-bold text-white uppercase italic">Tap Oracle to start</p>
+            <span className="text-lg animate-bounce-horizontal">👈</span>
+          </div>
+        </div>
+
+        {/* Oracle Prophecy Board */}
+        <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
           
-          {/* Oracle Logo - Integrated with the Board */}
           <button 
             onClick={getNewProphecy}
             className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all overflow-hidden z-20"
@@ -216,7 +231,8 @@ const handleShare = useCallback(() => {
           </p>
         </div>
 
-        <div className="flex gap-3 mb-6">
+        {/* Action Buttons */}
+        <div className="flex gap-3 mb-2">
           <div className="flex-1 animate-oracle-sync" style={{ animationDelay: '0.2s' }}>
             <Transaction 
               chainId={8453} 
@@ -243,6 +259,11 @@ const handleShare = useCallback(() => {
             </Transaction>
           </div>
         </div>
+
+        {/* Transaction Disclaimer */}
+        <p className="text-[8px] text-center mb-4 text-white/40 uppercase tracking-wider font-bold">
+          ⚔️ Actions above will <span className="text-purple-400">seal your destiny onchain</span> (requires gas)
+        </p>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center shadow-inner">
