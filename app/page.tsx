@@ -225,10 +225,10 @@ export default function Page() {
 
   {/* ВТОРАЯ СТРЕЛКА: Она находится внутри темного блока и указывает на Оракула */}
   <div className="absolute left-12 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
-    <span className="text-2xl animate-bounce-horizontal inline-block rotate-180">
-      👉
-    </span>
-  </div>
+  <span className="text-2xl animate-bounce-horizontal inline-block">
+    👈
+  </span>
+</div>
 
   <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">
     Oracle Prophecy
