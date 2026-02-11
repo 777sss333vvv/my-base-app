@@ -212,24 +212,32 @@ export default function Page() {
         </div>
 
         {/* Oracle Prophecy Board */}
-        <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
-          
-          <button 
-            onClick={getNewProphecy}
-            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all overflow-hidden z-20"
-            style={{ width: '4.8rem', height: '4.8rem' }} 
-          >
-            <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
-          </button>
+<div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
+  
+  {/* Кнопка Оракула (она остается на месте слева) */}
+  <button 
+    onClick={getNewProphecy}
+    className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all overflow-hidden z-20"
+    style={{ width: '4.8rem', height: '4.8rem' }} 
+  >
+    <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
+  </button>
 
-          <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">
-            Oracle Prophecy
-          </div>
-          
-          <p className={`text-sm italic font-medium pl-8 pr-2 leading-relaxed text-center ${isOracleLoading ? 'animate-pulse opacity-50' : ''}`}>
-            &quot;{oracleMessage}&quot;
-          </p>
-        </div>
+  {/* ВТОРАЯ СТРЕЛКА: Она находится внутри темного блока и указывает на Оракула */}
+  <div className="absolute left-12 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
+    <span className="text-2xl animate-bounce-horizontal inline-block rotate-180">
+      👉
+    </span>
+  </div>
+
+  <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">
+    Oracle Prophecy
+  </div>
+  
+  <p className={`text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center ${isOracleLoading ? 'animate-pulse opacity-50' : ''}`}>
+    &quot;{oracleMessage}&quot;
+  </p>
+</div>
 
         {/* Action Buttons */}
         <div className="flex gap-3 mb-2">
