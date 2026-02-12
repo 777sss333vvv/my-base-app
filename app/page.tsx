@@ -43,9 +43,8 @@ export default function Page() {
   }, [oracleScore]);
 
   const triggerBonus = useCallback((text: string) => {
-    console.log("TRIGGERING UI BONUS:", text); // ЛОГ В КОНСОЛЬ
     setShowBonus({ show: true, text });
-    setTimeout(() => setShowBonus({ show: false, text: "" }), 4000);
+    setTimeout(() => setShowBonus({ show: false, text: "" }), 3500);
   }, []);
 
   const prophecies = useMemo(() => [
@@ -53,10 +52,7 @@ export default function Page() {
     "A red candle is not the end, but a test of your faith.",
     "The Oracle sees a golden exit. Know your target.",
     "Liquidity flows where conviction grows. Stay steady.",
-    "Fear is the thief of generational wealth. Lock the door.",
     "The stars align for a breakout. Are you positioned?",
-    "The dip you fear is the entry you prayed for.",
-    "Greed blinds the eye; logic secures the bag.",
     "On the Base chain, every transaction is a step toward destiny.",
     "The Oracle is pleased with your activity. Fortune follows."
   ], []);
@@ -81,27 +77,17 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-  // УЛЬТИМАТИВНАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ
+  // НАДЕЖНОЕ ОБНОВЛЕНИЕ СКОРА
   const handleScoreUpdate = (choice: 'accept' | 'defy', txHash: string) => {
-    console.log("CHECKING TX HASH:", txHash);
-
-    const usedHashes = JSON.parse(localStorage.getItem('oracle_used_hashes_v1') || '[]');
+    if (!txHash) return;
     
-    if (usedHashes.includes(txHash)) {
-      console.warn("BLOCKING: Hash already processed once.");
-      return;
-    }
+    const usedHashes = JSON.parse(localStorage.getItem('oracle_used_hashes_v1') || '[]');
+    if (usedHashes.includes(txHash)) return;
 
-    // Сохраняем сразу, чтобы не успел проскочить повторный вызов
     usedHashes.push(txHash);
     localStorage.setItem('oracle_used_hashes_v1', JSON.stringify(usedHashes));
 
-    setOracleScore(prev => {
-        const newScore = prev + 100;
-        console.log("SUCCESS: New Oracle Score is", newScore);
-        return newScore;
-    });
-    
+    setOracleScore(prev => prev + 100);
     setLastChoice(choice);
     triggerBonus("+100 ORACLE SCORE");
   };
@@ -171,10 +157,10 @@ export default function Page() {
         }
         .animate-oracle-sync { animation: floatSync 3s ease-in-out infinite; }
         .animate-bounce-horizontal { animation: bounceHorizontal 1s infinite; }
-        .animate-fade-center { animation: fadeUpCenter 4s forwards; }
+        .animate-fade-center { animation: fadeUpCenter 3.5s forwards; }
       `}</style>
 
-      {/* ФИКСИРОВАННОЕ ОКНО */}
+      {/* БОНУСНОЕ ОКНО - ВЫШЕ ВСЕХ */}
       {showBonus.show && (
           <div className="fixed top-32 left-1/2 z-[9999] bg-white text-[#FF00FF] px-8 py-4 rounded-full font-black text-lg shadow-[0_0_40px_rgba(255,0,255,0.8)] animate-fade-center border-4 border-[#FF00FF] pointer-events-none whitespace-nowrap">
               {showBonus.text} 🔮
@@ -188,7 +174,6 @@ export default function Page() {
 
       <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
         
-        {/* User Card */}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="relative">
             {user?.pfpUrl ? (
@@ -197,35 +182,33 @@ export default function Page() {
               <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-mono">?</div>
             )}
           </div>
-          <h2 className="text-lg font-black mt-2">{user ? `@${user.username}` : "Base Builder"}</h2>
+          <h2 className="text-lg font-black mt-2 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
         </div>
 
-        {/* Oracle Section */}
+        {/* ORACLE - ТЕПЕРЬ СНОВА КРУГЛЫЙ */}
         <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
           <button 
             onClick={getNewProphecy}
-            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all z-20"
+            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all z-20 overflow-hidden"
             style={{ width: '4.8rem', height: '4.8rem' }} 
           >
-            <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
+            <img src={TOKEN_IMAGE} className="w-full h-full object-cover rounded-full" alt="Oracle" />
           </button>
           <div className="absolute left-12 top-1/2 -translate-y-1/2 z-30 pointer-events-none animate-bounce-horizontal text-2xl">👈</div>
           <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase text-white shadow-lg">Oracle Prophecy</div>
-          <p className={`text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center ${isOracleLoading ? 'animate-pulse opacity-50' : ''}`}>
+          <p className="text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center">
             &quot;{oracleMessage}&quot;
           </p>
         </div>
 
-        {/* Buttons */}
         <div className="flex gap-3 mb-2">
           <div className="flex-1">
             <Transaction 
               chainId={8453} 
               calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
               onStatus={(s: any) => { 
-                console.log("TX STATUS UPDATE:", s); // ЛОГ ДЛЯ ТЕБЯ
-                // Глубокий поиск хеша (иногда он в s.statusData, иногда в s.receipt)
-                const hash = s.statusData?.transactionHash || s.receipt?.transactionHash;
+                // Ищем хеш везде, где он может быть
+                const hash = s.statusData?.transactionHash || s.receipt?.transactionHash || s.transactionHash;
                 if (s.statusName === 'success' && hash) { 
                   handleScoreUpdate('accept', hash); 
                 } 
@@ -240,7 +223,7 @@ export default function Page() {
               chainId={8453} 
               calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
               onStatus={(s: any) => { 
-                const hash = s.statusData?.transactionHash || s.receipt?.transactionHash;
+                const hash = s.statusData?.transactionHash || s.receipt?.transactionHash || s.transactionHash;
                 if (s.statusName === 'success' && hash) { 
                   handleScoreUpdate('defy', hash); 
                 } 
@@ -251,7 +234,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Loyalty Bonus */}
         {!isBonusClaimed ? (
           <button onClick={handleAddApp} className="mb-4 w-full bg-black/40 border border-[#0052FF]/50 py-3 rounded-2xl text-[10px] font-black uppercase text-blue-400">
             ➕ Add App to Farcaster (+250 BONUS)
@@ -262,13 +244,12 @@ export default function Page() {
           </div>
         )}
 
-        {/* Scores */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center shadow-inner">
+          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center">
             <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Base Score</p>
             <p className="text-2xl font-mono font-black text-white">{txCount ?? "..."}</p>
           </div>
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center shadow-inner">
+          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center">
             <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p>
             <p className="text-2xl font-mono font-black text-[#FF00FF]">{oracleScore}</p>
           </div>
@@ -278,13 +259,12 @@ export default function Page() {
           Share My Prophecy ↗
         </button>
 
-        {/* Activity */}
         <div className="mb-4 bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
           <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between">
             <span>Live Onchain Activity</span>
             <span className="text-blue-400">by Alchemy</span>
           </p>
-          <div className="space-y-2 max-h-[120px] overflow-y-auto">
+          <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1">
             {transactions.slice(0, 3).map((tx: any, i: number) => (
                 <div key={i} className="bg-white/5 border border-white/5 p-3 rounded-xl flex justify-between items-center text-[10px]">
                   <p className="font-bold opacity-80 uppercase">{tx.asset}</p>
