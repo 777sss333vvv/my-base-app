@@ -23,6 +23,7 @@ export default function Page() {
   const [oracleMessage, setOracleMessage] = useState("Tap the Oracle and get a prophecy");
   const [isOracleLoading, setIsOracleLoading] = useState(false);
   const [lastChoice, setLastChoice] = useState<'accept' | 'defy' | null>(null);
+  const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
   
   const isUpdatingScore = useRef(false);
 
@@ -38,6 +39,12 @@ export default function Page() {
   useEffect(() => {
     localStorage.setItem('oracle_score_v5', oracleScore.toString());
   }, [oracleScore]);
+
+  // Функция для показа всплывающего бонуса
+  const triggerBonus = (text: string) => {
+    setShowBonus({ show: true, text });
+    setTimeout(() => setShowBonus({ show: false, text: "" }), 3000);
+  };
 
   const prophecies = useMemo(() => [
     "The charts whisper green. Patience is your strongest shield.",
@@ -117,7 +124,20 @@ export default function Page() {
       isUpdatingScore.current = true;
       setOracleScore(prev => prev + 100);
       setLastChoice(choice);
+      triggerBonus("+100 ORACLE SCORE");
       setTimeout(() => { isUpdatingScore.current = false; }, 5000);
+    }
+  };
+
+  const handleAddApp = async () => {
+    try {
+        const result = await sdk.actions.addFrame();
+        if (result) {
+            setOracleScore(prev => prev + 250);
+            triggerBonus("+250 LOYALTY BONUS");
+        }
+    } catch (e) {
+        console.error("Add app failed", e);
     }
   };
 
@@ -173,13 +193,29 @@ export default function Page() {
           0%, 100% { transform: translateX(0); }
           50% { transform: translateX(-10px); }
         }
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(10px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
         .animate-oracle-sync {
           animation: floatSync 3s ease-in-out infinite;
         }
         .animate-bounce-horizontal {
           animation: bounceHorizontal 1s infinite;
         }
+        .animate-fade-up {
+            animation: fadeUp 3s forwards;
+        }
       `}</style>
+
+      {/* Floating Bonus Alert */}
+      {showBonus.show && (
+          <div className="fixed top-20 z-50 bg-white text-[#FF00FF] px-6 py-2 rounded-full font-black text-xs shadow-[0_0_20px_rgba(255,255,255,0.5)] animate-fade-up border-2 border-[#FF00FF]">
+              {showBonus.text} 🔮
+          </div>
+      )}
 
       <header className="w-full max-w-md flex justify-between items-center mb-4 px-2">
         <h1 className="text-sm font-black tracking-tighter italic opacity-80 uppercase">Score 5.0: Oracle</h1>
@@ -212,32 +248,32 @@ export default function Page() {
         </div>
 
         {/* Oracle Prophecy Board */}
-<div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
-  
-  {/* Кнопка Оракула (она остается на месте слева) */}
-  <button 
-    onClick={getNewProphecy}
-    className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all overflow-hidden z-20"
-    style={{ width: '4.8rem', height: '4.8rem' }} 
-  >
-    <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
-  </button>
+        <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
+          
+          {/* Кнопка Оракула */}
+          <button 
+            onClick={getNewProphecy}
+            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 active:brightness-150 active:shadow-[0_0_30px_rgba(255,255,255,0.8)] transition-all overflow-hidden z-20"
+            style={{ width: '4.8rem', height: '4.8rem' }} 
+          >
+            <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
+          </button>
 
-  {/* ВТОРАЯ СТРЕЛКА: Она находится внутри темного блока и указывает на Оракула */}
-  <div className="absolute left-12 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
-  <span className="text-2xl animate-bounce-horizontal inline-block">
-    👈
-  </span>
-</div>
+          {/* ВТОРАЯ СТРЕЛКА */}
+          <div className="absolute left-12 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
+            <span className="text-2xl animate-bounce-horizontal inline-block">
+              👈
+            </span>
+          </div>
 
-  <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">
-    Oracle Prophecy
-  </div>
-  
-  <p className={`text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center ${isOracleLoading ? 'animate-pulse opacity-50' : ''}`}>
-    &quot;{oracleMessage}&quot;
-  </p>
-</div>
+          <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">
+            Oracle Prophecy
+          </div>
+          
+          <p className={`text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center ${isOracleLoading ? 'animate-pulse opacity-50' : ''}`}>
+            &quot;{oracleMessage}&quot;
+          </p>
+        </div>
 
         {/* Action Buttons */}
         <div className="flex gap-3 mb-2">
@@ -248,8 +284,8 @@ export default function Page() {
               onStatus={(s: any) => { if (s.statusName === 'success') handleScoreUpdate('accept'); }}
             >
               <TransactionButton 
-                className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF] shadow-[0_0_10px_rgba(255,0,255,0.3)] hover:scale-105 transition-transform" 
-                text="ACCEPT FATE" 
+                className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF] shadow-[0_0_10px_rgba(255,0,255,0.3)] hover:scale-105 active:scale-95 transition-all" 
+                text="ACCEPT FATE (+100)" 
               />
             </Transaction>
           </div>
@@ -261,12 +297,20 @@ export default function Page() {
               onStatus={(s: any) => { if (s.statusName === 'success') handleScoreUpdate('defy'); }}
             >
               <TransactionButton 
-                className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF] shadow-[0_0_10px_rgba(0,82,255,0.3)] hover:scale-105 transition-transform" 
-                text="DEFY THE PROPHECY" 
+                className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF] shadow-[0_0_10px_rgba(0,82,255,0.3)] hover:scale-105 active:scale-95 transition-all" 
+                text="DEFY FATE (+100)" 
               />
             </Transaction>
           </div>
         </div>
+
+        {/* Add App Button - SEASON 1 BOOST */}
+        <button 
+          onClick={handleAddApp}
+          className="mb-4 w-full bg-black/40 border border-[#0052FF]/50 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-400 hover:bg-blue-400/10 active:scale-95 transition-all shadow-lg"
+        >
+          ➕ Add App to Farcaster (+250 BONUS)
+        </button>
 
         {/* Transaction Disclaimer */}
         <p className="text-[8px] text-center mb-4 text-white/40 uppercase tracking-wider font-bold">
