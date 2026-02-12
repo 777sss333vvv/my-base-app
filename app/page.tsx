@@ -25,8 +25,6 @@ export default function Page() {
   const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
   const [isBonusClaimed, setIsBonusClaimed] = useState(false);
   
-  const isProcessing = useRef(false);
-
   const { isConnected, address: connectedAddress } = useAccount();
   const { connect, connectors } = useConnect();
   const publicClient = usePublicClient();
@@ -44,7 +42,7 @@ export default function Page() {
 
   const triggerBonus = useCallback((text: string) => {
     setShowBonus({ show: true, text });
-    setTimeout(() => setShowBonus({ show: false, text: "" }), 3500);
+    setTimeout(() => setShowBonus({ show: false, text: "" }), 4000);
   }, []);
 
   const prophecies = useMemo(() => [
@@ -77,10 +75,8 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-  // НАДЕЖНОЕ ОБНОВЛЕНИЕ СКОРА
-  const handleScoreUpdate = (choice: 'accept' | 'defy', txHash: string) => {
+  const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', txHash: string) => {
     if (!txHash) return;
-    
     const usedHashes = JSON.parse(localStorage.getItem('oracle_used_hashes_v1') || '[]');
     if (usedHashes.includes(txHash)) return;
 
@@ -90,7 +86,7 @@ export default function Page() {
     setOracleScore(prev => prev + 100);
     setLastChoice(choice);
     triggerBonus("+100 ORACLE SCORE");
-  };
+  }, [triggerBonus]);
 
   const handleAddApp = async () => {
     if (isBonusClaimed) return;
@@ -150,19 +146,22 @@ export default function Page() {
         @keyframes floatSync { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
         @keyframes bounceHorizontal { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-10px); } }
         @keyframes fadeUpCenter {
-            0% { opacity: 0; transform: translate(-50%, 40px); }
+            0% { opacity: 0; transform: translate(-50%, 20px); }
             15% { opacity: 1; transform: translate(-50%, 0); }
             85% { opacity: 1; transform: translate(-50%, 0); }
-            100% { opacity: 0; transform: translate(-50%, -40px); }
+            100% { opacity: 0; transform: translate(-50%, -20px); }
         }
         .animate-oracle-sync { animation: floatSync 3s ease-in-out infinite; }
         .animate-bounce-horizontal { animation: bounceHorizontal 1s infinite; }
-        .animate-fade-center { animation: fadeUpCenter 3.5s forwards; }
+        .animate-fade-center { animation: fadeUpCenter 4s forwards; }
       `}</style>
 
-      {/* БОНУСНОЕ ОКНО - ВЫШЕ ВСЕХ */}
+      {/* ТОСТЕР */}
       {showBonus.show && (
-          <div className="fixed top-32 left-1/2 z-[9999] bg-white text-[#FF00FF] px-8 py-4 rounded-full font-black text-lg shadow-[0_0_40px_rgba(255,0,255,0.8)] animate-fade-center border-4 border-[#FF00FF] pointer-events-none whitespace-nowrap">
+          <div 
+            style={{ zIndex: 10000 }}
+            className="fixed top-24 left-1/2 bg-white text-[#FF00FF] px-8 py-3 rounded-full font-black text-lg shadow-[0_10px_40px_rgba(0,0,0,0.3)] animate-fade-center border-4 border-[#FF00FF] whitespace-nowrap pointer-events-none"
+          >
               {showBonus.text} 🔮
           </div>
       )}
@@ -177,7 +176,7 @@ export default function Page() {
         <div className="flex flex-col items-center text-center mb-6">
           <div className="relative">
             {user?.pfpUrl ? (
-              <img src={user.pfpUrl} alt="PFP" className="w-16 h-16 rounded-full border-4 border-white/30" />
+              <img src={user.pfpUrl} alt="PFP" className="w-16 h-16 rounded-full border-4 border-white/30 shadow-xl" />
             ) : (
               <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-mono">?</div>
             )}
@@ -185,11 +184,11 @@ export default function Page() {
           <h2 className="text-lg font-black mt-2 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
         </div>
 
-        {/* ORACLE - ТЕПЕРЬ СНОВА КРУГЛЫЙ */}
+        {/* ORACLE (ROUND) */}
         <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
           <button 
             onClick={getNewProphecy}
-            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all z-20 overflow-hidden"
+            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-all z-20 overflow-hidden ring-4 ring-blue-500/20"
             style={{ width: '4.8rem', height: '4.8rem' }} 
           >
             <img src={TOKEN_IMAGE} className="w-full h-full object-cover rounded-full" alt="Oracle" />
@@ -206,12 +205,9 @@ export default function Page() {
             <Transaction 
               chainId={8453} 
               calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
-              onStatus={(s: any) => { 
-                // Ищем хеш везде, где он может быть
-                const hash = s.statusData?.transactionHash || s.receipt?.transactionHash || s.transactionHash;
-                if (s.statusName === 'success' && hash) { 
-                  handleScoreUpdate('accept', hash); 
-                } 
+              onSuccess={(res: any) => {
+                const h = res.transactionReceipts?.[0]?.transactionHash || res.transactionHash;
+                if (h) handleScoreUpdate('accept', h);
               }}
             >
               <TransactionButton className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF]" text="ACCEPT FATE (+100)" />
@@ -222,11 +218,9 @@ export default function Page() {
             <Transaction 
               chainId={8453} 
               calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
-              onStatus={(s: any) => { 
-                const hash = s.statusData?.transactionHash || s.receipt?.transactionHash || s.transactionHash;
-                if (s.statusName === 'success' && hash) { 
-                  handleScoreUpdate('defy', hash); 
-                } 
+              onSuccess={(res: any) => {
+                const h = res.transactionReceipts?.[0]?.transactionHash || res.transactionHash;
+                if (h) handleScoreUpdate('defy', h);
               }}
             >
               <TransactionButton className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF]" text="DEFY FATE (+100)" />
@@ -255,16 +249,16 @@ export default function Page() {
           </div>
         </div>
 
-        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase">
+        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">
           Share My Prophecy ↗
         </button>
 
-        <div className="mb-4 bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
+        <div className="bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
           <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between">
             <span>Live Onchain Activity</span>
             <span className="text-blue-400">by Alchemy</span>
           </p>
-          <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[100px] overflow-y-auto pr-1">
             {transactions.slice(0, 3).map((tx: any, i: number) => (
                 <div key={i} className="bg-white/5 border border-white/5 p-3 rounded-xl flex justify-between items-center text-[10px]">
                   <p className="font-bold opacity-80 uppercase">{tx.asset}</p>
@@ -275,8 +269,11 @@ export default function Page() {
         </div>
       </main>
 
+      {/* ТА САМАЯ СТРОЧКА — ТЕПЕРЬ ОНА ТУТ НАВСЕГДА */}
       <footer className="mt-8 mb-10 text-center opacity-40">
-        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Powered by Base • Solo Building</p>
+        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">
+          Powered by Base • Solo Building
+        </p>
       </footer>
     </div>
   );
