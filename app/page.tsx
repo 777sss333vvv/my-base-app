@@ -25,7 +25,8 @@ export default function Page() {
   const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
   const [isBonusClaimed, setIsBonusClaimed] = useState(false);
   
-  const isUpdatingScore = useRef(false);
+  // ПРЕДОХРАНИТЕЛИ
+  const lastUpdateTimestamp = useRef<number>(0);
 
   const { isConnected, address: connectedAddress } = useAccount();
   const { connect, connectors } = useConnect();
@@ -101,6 +102,7 @@ export default function Page() {
     "The Oracle is pleased with your activity. Fortune follows."
   ], []);
 
+  // ГОЛОВА: Только текст. Технически не может дать очки.
   const getNewProphecy = () => {
     if (isOracleLoading) return;
     setIsOracleLoading(true);
@@ -122,14 +124,15 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
+  // НАЧИСЛЕНИЕ: Строго раз в 10 секунд и только по транзакции
   const handleScoreUpdate = (choice: 'accept' | 'defy') => {
-    if (!isUpdatingScore.current) {
-      isUpdatingScore.current = true;
-      setOracleScore(prev => prev + 100);
-      setLastChoice(choice);
-      triggerBonus("+100 ORACLE SCORE");
-      setTimeout(() => { isUpdatingScore.current = false; }, 5000);
-    }
+    const now = Date.now();
+    if (now - lastUpdateTimestamp.current < 10000) return; // Жесткий кулдаун 10 сек
+
+    lastUpdateTimestamp.current = now;
+    setOracleScore(prev => prev + 100);
+    setLastChoice(choice);
+    triggerBonus("+100 ORACLE SCORE");
   };
 
   const handleAddApp = async () => {
@@ -138,7 +141,7 @@ export default function Page() {
         return;
     }
     try {
-        const result = await sdk.actions.addFrame();
+        await sdk.actions.addFrame();
         setOracleScore(prev => prev + 250);
         triggerBonus("+250 LOYALTY BONUS");
         localStorage.setItem('oracle_loyalty_v1', 'true');
@@ -242,6 +245,7 @@ export default function Page() {
           </div>
         </div>
 
+        {/* Oracle Board */}
         <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
           <button 
             onClick={getNewProphecy}
@@ -314,10 +318,7 @@ export default function Page() {
           </div>
         </div>
 
-        <button 
-          onClick={handleShare} 
-          className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs shadow-xl mb-4 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-tighter"
-        >
+        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs shadow-xl mb-4 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-tighter">
           Share My Prophecy ↗
         </button>
 
