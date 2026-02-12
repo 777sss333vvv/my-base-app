@@ -43,10 +43,12 @@ export default function Page() {
     localStorage.setItem('oracle_score_v5', oracleScore.toString());
   }, [oracleScore]);
 
-  const triggerBonus = (text: string) => {
+  // УЛУЧШЕННАЯ ФУНКЦИЯ УВЕДОМЛЕНИЯ
+  const triggerBonus = useCallback((text: string) => {
     setShowBonus({ show: true, text });
-    setTimeout(() => setShowBonus({ show: false, text: "" }), 3000);
-  };
+    // Увеличил время показа до 4 секунд, чтобы точно было видно
+    setTimeout(() => setShowBonus({ show: false, text: "" }), 4000);
+  }, []);
 
   const prophecies = useMemo(() => [
     "The charts whisper green. Patience is your strongest shield.",
@@ -128,7 +130,7 @@ export default function Page() {
     const usedHashes = JSON.parse(localStorage.getItem('oracle_used_hashes_v1') || '[]');
     
     if (usedHashes.includes(txHash)) {
-      console.log("Transaction already processed");
+      console.log("TX ALREADY USED:", txHash);
       return;
     }
 
@@ -140,6 +142,8 @@ export default function Page() {
 
     setOracleScore(prev => prev + 100);
     setLastChoice(choice);
+    
+    // ВЫЗОВ ОКНА
     triggerBonus("+100 ORACLE SCORE");
     
     setTimeout(() => { isProcessing.current = false; }, 2000);
@@ -203,33 +207,34 @@ export default function Page() {
   }, [connectedAddress, user]);
 
   return (
-    <div className="min-h-screen bg-[#0052FF] text-white flex flex-col items-center p-4 font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#0052FF] text-white flex flex-col items-center p-4 font-sans overflow-x-hidden relative">
       <style jsx global>{`
         @keyframes floatSync { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
         @keyframes bounceHorizontal { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-10px); } }
         @keyframes fadeUp {
-            0% { opacity: 0; transform: translateY(10px); }
-            20% { opacity: 1; transform: translateY(0); }
-            80% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-20px); }
+            0% { opacity: 0; transform: translate(-50%, 20px); }
+            15% { opacity: 1; transform: translate(-50%, 0); }
+            85% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -30px); }
         }
         .animate-oracle-sync { animation: floatSync 3s ease-in-out infinite; }
         .animate-bounce-horizontal { animation: bounceHorizontal 1s infinite; }
-        .animate-fade-up { animation: fadeUp 3s forwards; }
+        .animate-fade-up { animation: fadeUp 4s forwards; }
       `}</style>
 
+      {/* УЛУЧШЕННОЕ ВСПОЛЫВАЮЩЕЕ ОКНО (центрировано по экрану) */}
       {showBonus.show && (
-          <div className="fixed top-20 z-50 bg-white text-[#FF00FF] px-6 py-2 rounded-full font-black text-xs shadow-[0_0_20px_rgba(255,255,255,0.5)] animate-fade-up border-2 border-[#FF00FF]">
+          <div className="fixed top-24 left-1/2 z-[100] bg-white text-[#FF00FF] px-8 py-3 rounded-full font-black text-sm shadow-[0_0_30px_rgba(255,0,255,0.6)] animate-fade-up border-4 border-[#FF00FF] pointer-events-none whitespace-nowrap">
               {showBonus.text} 🔮
           </div>
       )}
 
-      <header className="w-full max-w-md flex justify-between items-center mb-4 px-2">
+      <header className="w-full max-w-md flex justify-between items-center mb-4 px-2 z-10">
         <h1 className="text-sm font-black tracking-tighter italic opacity-80 uppercase">Score 5.0: Oracle</h1>
         <div className="scale-75 origin-right"><Wallet><ConnectWallet className="bg-white text-[#0052FF]" /></Wallet></div>
       </header>
 
-      <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
+      <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col z-10">
         
         <div className="flex flex-col items-center text-center mb-6">
           <div className="relative">
@@ -356,8 +361,8 @@ export default function Page() {
         </div>
       </main>
 
-      {/* ФУТЕР В САМОМ НИЗУ */}
-      <footer className="mt-6 mb-8 text-center opacity-40">
+      {/* НИЗ (ФУТЕР) */}
+      <footer className="mt-8 mb-10 text-center opacity-40 z-10">
         <p className="text-[9px] uppercase tracking-[0.4em] font-bold">
           Powered by Base • Solo Building
         </p>
