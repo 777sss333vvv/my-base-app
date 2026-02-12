@@ -25,8 +25,7 @@ export default function Page() {
   const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
   const [isBonusClaimed, setIsBonusClaimed] = useState(false);
   
-  // ПРЕДОХРАНИТЕЛИ
-  const lastUpdateTimestamp = useRef<number>(0);
+  const isProcessing = useRef(false);
 
   const { isConnected, address: connectedAddress } = useAccount();
   const { connect, connectors } = useConnect();
@@ -102,7 +101,6 @@ export default function Page() {
     "The Oracle is pleased with your activity. Fortune follows."
   ], []);
 
-  // ГОЛОВА: Только текст. Технически не может дать очки.
   const getNewProphecy = () => {
     if (isOracleLoading) return;
     setIsOracleLoading(true);
@@ -124,15 +122,27 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-  // НАЧИСЛЕНИЕ: Строго раз в 10 секунд и только по транзакции
-  const handleScoreUpdate = (choice: 'accept' | 'defy') => {
-    const now = Date.now();
-    if (now - lastUpdateTimestamp.current < 10000) return; // Жесткий кулдаун 10 сек
+  const handleScoreUpdate = (choice: 'accept' | 'defy', txHash?: string) => {
+    if (!txHash) return;
 
-    lastUpdateTimestamp.current = now;
+    const usedHashes = JSON.parse(localStorage.getItem('oracle_used_hashes_v1') || '[]');
+    
+    if (usedHashes.includes(txHash)) {
+      console.log("Transaction already processed");
+      return;
+    }
+
+    if (isProcessing.current) return;
+    isProcessing.current = true;
+
+    usedHashes.push(txHash);
+    localStorage.setItem('oracle_used_hashes_v1', JSON.stringify(usedHashes));
+
     setOracleScore(prev => prev + 100);
     setLastChoice(choice);
     triggerBonus("+100 ORACLE SCORE");
+    
+    setTimeout(() => { isProcessing.current = false; }, 2000);
   };
 
   const handleAddApp = async () => {
@@ -195,14 +205,8 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-[#0052FF] text-white flex flex-col items-center p-4 font-sans overflow-x-hidden">
       <style jsx global>{`
-        @keyframes floatSync {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-        @keyframes bounceHorizontal {
-          0%, 100% { transform: translateX(0); }
-          50% { transform: translateX(-10px); }
-        }
+        @keyframes floatSync { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+        @keyframes bounceHorizontal { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-10px); } }
         @keyframes fadeUp {
             0% { opacity: 0; transform: translateY(10px); }
             20% { opacity: 1; transform: translateY(0); }
@@ -226,6 +230,7 @@ export default function Page() {
       </header>
 
       <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
+        
         <div className="flex flex-col items-center text-center mb-6">
           <div className="relative">
             {user?.pfpUrl ? (
@@ -245,7 +250,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Oracle Board */}
         <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
           <button 
             onClick={getNewProphecy}
@@ -264,26 +268,35 @@ export default function Page() {
         </div>
 
         <div className="flex gap-3 mb-2">
-          <div className="flex-1 animate-oracle-sync" style={{ animationDelay: '0.2s' }}>
+          <div className="flex-1">
             <Transaction 
               chainId={8453} 
               calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
-              onStatus={(s: any) => { if (s.statusName === 'success') handleScoreUpdate('accept'); }}
+              onStatus={(s: any) => { 
+                if (s.statusName === 'success' && s.statusData?.transactionHash) { 
+                  handleScoreUpdate('accept', s.statusData.transactionHash); 
+                } 
+              }}
             >
               <TransactionButton 
-                className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF] shadow-[0_0_10px_rgba(255,0,255,0.3)] hover:scale-105 active:scale-95 transition-all" 
+                className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF]" 
                 text="ACCEPT FATE (+100)" 
               />
             </Transaction>
           </div>
-          <div className="flex-1 animate-oracle-sync" style={{ animationDelay: '0.4s' }}>
+
+          <div className="flex-1">
             <Transaction 
               chainId={8453} 
               calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
-              onStatus={(s: any) => { if (s.statusName === 'success') handleScoreUpdate('defy'); }}
+              onStatus={(s: any) => { 
+                if (s.statusName === 'success' && s.statusData?.transactionHash) { 
+                  handleScoreUpdate('defy', s.statusData.transactionHash); 
+                } 
+              }}
             >
               <TransactionButton 
-                className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF] shadow-[0_0_10px_rgba(0,82,255,0.3)] hover:scale-105 active:scale-95 transition-all" 
+                className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF]" 
                 text="DEFY FATE (+100)" 
               />
             </Transaction>
@@ -293,39 +306,33 @@ export default function Page() {
         {!isBonusClaimed ? (
           <button 
             onClick={handleAddApp}
-            className="mb-4 w-full bg-black/40 border border-[#0052FF]/50 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-400 hover:bg-blue-400/10 active:scale-95 transition-all shadow-lg"
+            className="mb-4 w-full bg-black/40 border border-[#0052FF]/50 py-3 rounded-2xl text-[10px] font-black uppercase text-blue-400"
           >
             ➕ Add App to Farcaster (+250 BONUS)
           </button>
         ) : (
-          <div className="mb-4 w-full py-3 text-[10px] text-green-400 font-black uppercase text-center border border-green-400/20 rounded-2xl bg-green-400/5 tracking-widest">
+          <div className="mb-4 w-full py-3 text-[10px] text-green-400 font-black uppercase text-center border border-green-400/20 rounded-2xl bg-green-400/5">
             ✅ Loyalty Bonus Claimed
           </div>
         )}
 
-        <p className="text-[8px] text-center mb-4 text-white/40 uppercase tracking-wider font-bold">
-          ⚔️ Actions above will <span className="text-purple-400">seal your destiny onchain</span>
-        </p>
-
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center shadow-inner">
-            <p className="text-[9px] uppercase opacity-50 mb-1 tracking-widest font-bold">Base Score</p>
+          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center">
+            <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Base Score</p>
             <p className="text-2xl font-mono font-black text-white">{txCount ?? "..."}</p>
           </div>
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center shadow-inner">
-            <p className="text-[9px] uppercase opacity-50 mb-1 tracking-widest font-bold">Oracle Score</p>
-            <p className="text-2xl font-mono font-black text-[#FF00FF] shadow-[#FF00FF]/20 shadow-sm">{oracleScore}</p>
+          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center">
+            <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p>
+            <p className="text-2xl font-mono font-black text-[#FF00FF]">{oracleScore}</p>
           </div>
         </div>
 
-        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs shadow-xl mb-4 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-tighter">
+        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase">
           Share My Prophecy ↗
         </button>
 
-        <p className="text-[9px] text-center mb-6 opacity-60 font-bold uppercase tracking-tight">Hold $USERBOX to boost your Oracle Score</p>
-
         <div className="mb-4 bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
-          <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/40 mb-4 flex justify-between items-center">
+          <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between">
             <span>Live Onchain Activity</span>
             <span className="text-blue-400">by Alchemy</span>
           </p>
@@ -337,7 +344,7 @@ export default function Page() {
                 <div key={i} className="bg-white/5 border border-white/5 p-3 rounded-xl flex justify-between items-center text-[10px]">
                   <div className="flex items-center gap-2">
                     <span className="text-xs">{tx.asset === 'ETH' ? '🔵' : '📦'}</span>
-                    <p className="font-bold opacity-80 uppercase tracking-tighter">{tx.category === 'erc721' ? 'NFT' : 'Transfer'}</p>
+                    <p className="font-bold opacity-80 uppercase">{tx.category === 'erc721' ? 'NFT' : 'Transfer'}</p>
                   </div>
                   <p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)} {tx.asset}</p>
                 </div>
@@ -347,10 +354,14 @@ export default function Page() {
             )}
           </div>
         </div>
-        <footer className="text-center pb-2">
-           <p className="text-[8px] text-white/30 uppercase tracking-[0.4em] font-bold">Powered by Base • Solo Building</p>
-        </footer>
       </main>
+
+      {/* ФУТЕР В САМОМ НИЗУ */}
+      <footer className="mt-6 mb-8 text-center opacity-40">
+        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">
+          Powered by Base • Solo Building
+        </p>
+      </footer>
     </div>
   );
 }
