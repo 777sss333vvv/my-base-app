@@ -34,7 +34,6 @@ export default function Page() {
   useEffect(() => {
     const savedScore = localStorage.getItem('oracle_score_v5');
     if (savedScore) setOracleScore(Number(savedScore));
-    
     const claimed = localStorage.getItem('oracle_loyalty_v1');
     if (claimed === 'true') setIsBonusClaimed(true);
   }, []);
@@ -43,10 +42,9 @@ export default function Page() {
     localStorage.setItem('oracle_score_v5', oracleScore.toString());
   }, [oracleScore]);
 
-  // УЛУЧШЕННАЯ ФУНКЦИЯ УВЕДОМЛЕНИЯ
   const triggerBonus = useCallback((text: string) => {
+    console.log("TRIGGERING UI BONUS:", text); // ЛОГ В КОНСОЛЬ
     setShowBonus({ show: true, text });
-    // Увеличил время показа до 4 секунд, чтобы точно было видно
     setTimeout(() => setShowBonus({ show: false, text: "" }), 4000);
   }, []);
 
@@ -55,51 +53,11 @@ export default function Page() {
     "A red candle is not the end, but a test of your faith.",
     "The Oracle sees a golden exit. Know your target.",
     "Liquidity flows where conviction grows. Stay steady.",
-    "A forgotten wallet holds a future fortune. Seek the keys.",
-    "The trend is your friend until the Oracle sees the bend.",
-    "High gas is the price of entry to the kingdom of gains.",
-    "Silence in the market is the calm before the ultimate pump.",
-    "To defy the prophecy is to create your own moon.",
     "Fear is the thief of generational wealth. Lock the door.",
     "The stars align for a breakout. Are you positioned?",
-    "A whale moves in the shadows. Watch the on-chain ripples.",
-    "Small caps carry big dreams. Choose your seed wisely.",
     "The dip you fear is the entry you prayed for.",
     "Greed blinds the eye; logic secures the bag.",
     "On the Base chain, every transaction is a step toward destiny.",
-    "Your Oracle Score reflects your devotion. Keep building.",
-    "A sudden bridge will bring new tides of capital.",
-    "FOMO is a false prophet. Listen to the cold numbers.",
-    "The smartest move is often the one you didn't make.",
-    "Wealth is moving from the impatient to the diamond-handed.",
-    "An ecosystem bloom is coming. Base is the soil.",
-    "Your vision is clear, but the timing is the Oracle’s secret.",
-    "Don't chase the green candle; let it find you.",
-    "The decentralized path is narrow but leads to the sun.",
-    "Security is not an option; it is the foundation of your empire.",
-    "A strategic hedge will save you from the storm.",
-    "The Oracle detects a shift in the DAO. Power is moving.",
-    "Trust the code, for the code has no ego.",
-    "Your path to 100x starts with a single honest swap.",
-    "The bear sleeps, but the bull is already sharpening its horns.",
-    "Scarcity creates value. Hold what is rare.",
-    "The bridge to financial freedom is built with $USERBOX.",
-    "Look beyond the hype; the real alpha is in the utility.",
-    "A mystery airdrop awaits those who interact with the light.",
-    "Double your Oracle Score, double your luck in the next epoch.",
-    "The ledger never lies. Your history is your legacy.",
-    "When others panic, the Oracle finds opportunity.",
-    "A new protocol emerges. Be the first to witness.",
-    "Volatility is the heartbeat of a living market.",
-    "Your conviction will be tested at the resistance line.",
-    "The moon is not a destination, it’s a mindset.",
-    "A transfer of wealth is happening right now. Are you ready?",
-    "Wisdom is knowing when to take profit and when to hold.",
-    "The Oracle sees a multiplier in your near future.",
-    "Your Base Score is the map; your will is the compass.",
-    "Avoid the noise of the crowd. The signal is quiet.",
-    "Evolution requires burning the old to make way for the new.",
-    "Every block added is a brick in your digital fortress.",
     "The Oracle is pleased with your activity. Fortune follows."
   ], []);
 
@@ -117,52 +75,46 @@ export default function Page() {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                : lastChoice === 'defy' ? `⚔️ I defy my fate! The prophecy was: "${oracleMessage}"`
                : `🔮 My Oracle Prophecy: "${oracleMessage}"`;
-
     const shareText = `${intro}\n\n🛡️ Base Score: ${txCount}\n✨ Oracle Score: ${oracleScore}\n\nWhat choice would you make?`;
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-  const handleScoreUpdate = (choice: 'accept' | 'defy', txHash?: string) => {
-    if (!txHash) return;
+  // УЛЬТИМАТИВНАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ
+  const handleScoreUpdate = (choice: 'accept' | 'defy', txHash: string) => {
+    console.log("CHECKING TX HASH:", txHash);
 
     const usedHashes = JSON.parse(localStorage.getItem('oracle_used_hashes_v1') || '[]');
     
     if (usedHashes.includes(txHash)) {
-      console.log("TX ALREADY USED:", txHash);
+      console.warn("BLOCKING: Hash already processed once.");
       return;
     }
 
-    if (isProcessing.current) return;
-    isProcessing.current = true;
-
+    // Сохраняем сразу, чтобы не успел проскочить повторный вызов
     usedHashes.push(txHash);
     localStorage.setItem('oracle_used_hashes_v1', JSON.stringify(usedHashes));
 
-    setOracleScore(prev => prev + 100);
+    setOracleScore(prev => {
+        const newScore = prev + 100;
+        console.log("SUCCESS: New Oracle Score is", newScore);
+        return newScore;
+    });
+    
     setLastChoice(choice);
-    
-    // ВЫЗОВ ОКНА
     triggerBonus("+100 ORACLE SCORE");
-    
-    setTimeout(() => { isProcessing.current = false; }, 2000);
   };
 
   const handleAddApp = async () => {
-    if (isBonusClaimed) {
-        triggerBonus("ALREADY CLAIMED");
-        return;
-    }
+    if (isBonusClaimed) return;
     try {
         await sdk.actions.addFrame();
         setOracleScore(prev => prev + 250);
         triggerBonus("+250 LOYALTY BONUS");
         localStorage.setItem('oracle_loyalty_v1', 'true');
         setIsBonusClaimed(true);
-    } catch (e) {
-        console.error("Add app failed", e);
-    }
+    } catch (e) { console.error(e); }
   };
 
   useEffect(() => {
@@ -199,7 +151,7 @@ export default function Page() {
         try {
           const data = await getRecentTransactions(targetAddress);
           setTransactions(data || []);
-        } catch (err) { console.error("Alchemy error:", err); } 
+        } catch (err) { console.error(err); } 
         finally { setIsLoadingTx(false); }
       }
     }
@@ -211,82 +163,75 @@ export default function Page() {
       <style jsx global>{`
         @keyframes floatSync { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
         @keyframes bounceHorizontal { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-10px); } }
-        @keyframes fadeUp {
-            0% { opacity: 0; transform: translate(-50%, 20px); }
+        @keyframes fadeUpCenter {
+            0% { opacity: 0; transform: translate(-50%, 40px); }
             15% { opacity: 1; transform: translate(-50%, 0); }
             85% { opacity: 1; transform: translate(-50%, 0); }
-            100% { opacity: 0; transform: translate(-50%, -30px); }
+            100% { opacity: 0; transform: translate(-50%, -40px); }
         }
         .animate-oracle-sync { animation: floatSync 3s ease-in-out infinite; }
         .animate-bounce-horizontal { animation: bounceHorizontal 1s infinite; }
-        .animate-fade-up { animation: fadeUp 4s forwards; }
+        .animate-fade-center { animation: fadeUpCenter 4s forwards; }
       `}</style>
 
-      {/* УЛУЧШЕННОЕ ВСПОЛЫВАЮЩЕЕ ОКНО (центрировано по экрану) */}
+      {/* ФИКСИРОВАННОЕ ОКНО */}
       {showBonus.show && (
-          <div className="fixed top-24 left-1/2 z-[100] bg-white text-[#FF00FF] px-8 py-3 rounded-full font-black text-sm shadow-[0_0_30px_rgba(255,0,255,0.6)] animate-fade-up border-4 border-[#FF00FF] pointer-events-none whitespace-nowrap">
+          <div className="fixed top-32 left-1/2 z-[9999] bg-white text-[#FF00FF] px-8 py-4 rounded-full font-black text-lg shadow-[0_0_40px_rgba(255,0,255,0.8)] animate-fade-center border-4 border-[#FF00FF] pointer-events-none whitespace-nowrap">
               {showBonus.text} 🔮
           </div>
       )}
 
-      <header className="w-full max-w-md flex justify-between items-center mb-4 px-2 z-10">
-        <h1 className="text-sm font-black tracking-tighter italic opacity-80 uppercase">Score 5.0: Oracle</h1>
+      <header className="w-full max-w-md flex justify-between items-center mb-4 px-2">
+        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Score 5.0: Oracle</h1>
         <div className="scale-75 origin-right"><Wallet><ConnectWallet className="bg-white text-[#0052FF]" /></Wallet></div>
       </header>
 
-      <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col z-10">
+      <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
         
+        {/* User Card */}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="relative">
             {user?.pfpUrl ? (
-              <img src={user.pfpUrl} alt="PFP" className="w-16 h-16 rounded-full border-4 border-white/30 shadow-xl" />
+              <img src={user.pfpUrl} alt="PFP" className="w-16 h-16 rounded-full border-4 border-white/30" />
             ) : (
               <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-mono">?</div>
             )}
           </div>
-          <h2 className="text-lg font-black mt-2 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
+          <h2 className="text-lg font-black mt-2">{user ? `@${user.username}` : "Base Builder"}</h2>
         </div>
 
-        <div className="flex flex-col items-center mb-4 space-y-1">
-          <p className="text-[10px] font-black text-purple-300 uppercase tracking-[0.2em] animate-pulse">🔮 How to play:</p>
-          <div className="flex items-center gap-2 bg-black/20 px-4 py-1.5 rounded-full border border-white/10">
-            <p className="text-[11px] font-bold text-white uppercase italic">Tap Oracle to start</p>
-            <span className="text-lg animate-bounce-horizontal">👈</span>
-          </div>
-        </div>
-
+        {/* Oracle Section */}
         <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
           <button 
             onClick={getNewProphecy}
-            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all overflow-hidden z-20"
+            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all z-20"
             style={{ width: '4.8rem', height: '4.8rem' }} 
           >
             <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
           </button>
-          <div className="absolute left-12 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
-            <span className="text-2xl animate-bounce-horizontal inline-block">👈</span>
-          </div>
-          <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">Oracle Prophecy</div>
+          <div className="absolute left-12 top-1/2 -translate-y-1/2 z-30 pointer-events-none animate-bounce-horizontal text-2xl">👈</div>
+          <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase text-white shadow-lg">Oracle Prophecy</div>
           <p className={`text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center ${isOracleLoading ? 'animate-pulse opacity-50' : ''}`}>
             &quot;{oracleMessage}&quot;
           </p>
         </div>
 
+        {/* Buttons */}
         <div className="flex gap-3 mb-2">
           <div className="flex-1">
             <Transaction 
               chainId={8453} 
               calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
               onStatus={(s: any) => { 
-                if (s.statusName === 'success' && s.statusData?.transactionHash) { 
-                  handleScoreUpdate('accept', s.statusData.transactionHash); 
+                console.log("TX STATUS UPDATE:", s); // ЛОГ ДЛЯ ТЕБЯ
+                // Глубокий поиск хеша (иногда он в s.statusData, иногда в s.receipt)
+                const hash = s.statusData?.transactionHash || s.receipt?.transactionHash;
+                if (s.statusName === 'success' && hash) { 
+                  handleScoreUpdate('accept', hash); 
                 } 
               }}
             >
-              <TransactionButton 
-                className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF]" 
-                text="ACCEPT FATE (+100)" 
-              />
+              <TransactionButton className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF]" text="ACCEPT FATE (+100)" />
             </Transaction>
           </div>
 
@@ -295,24 +240,20 @@ export default function Page() {
               chainId={8453} 
               calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
               onStatus={(s: any) => { 
-                if (s.statusName === 'success' && s.statusData?.transactionHash) { 
-                  handleScoreUpdate('defy', s.statusData.transactionHash); 
+                const hash = s.statusData?.transactionHash || s.receipt?.transactionHash;
+                if (s.statusName === 'success' && hash) { 
+                  handleScoreUpdate('defy', hash); 
                 } 
               }}
             >
-              <TransactionButton 
-                className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF]" 
-                text="DEFY FATE (+100)" 
-              />
+              <TransactionButton className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF]" text="DEFY FATE (+100)" />
             </Transaction>
           </div>
         </div>
 
+        {/* Loyalty Bonus */}
         {!isBonusClaimed ? (
-          <button 
-            onClick={handleAddApp}
-            className="mb-4 w-full bg-black/40 border border-[#0052FF]/50 py-3 rounded-2xl text-[10px] font-black uppercase text-blue-400"
-          >
+          <button onClick={handleAddApp} className="mb-4 w-full bg-black/40 border border-[#0052FF]/50 py-3 rounded-2xl text-[10px] font-black uppercase text-blue-400">
             ➕ Add App to Farcaster (+250 BONUS)
           </button>
         ) : (
@@ -321,12 +262,13 @@ export default function Page() {
           </div>
         )}
 
+        {/* Scores */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center">
+          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center shadow-inner">
             <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Base Score</p>
             <p className="text-2xl font-mono font-black text-white">{txCount ?? "..."}</p>
           </div>
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center">
+          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center shadow-inner">
             <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p>
             <p className="text-2xl font-mono font-black text-[#FF00FF]">{oracleScore}</p>
           </div>
@@ -336,36 +278,25 @@ export default function Page() {
           Share My Prophecy ↗
         </button>
 
+        {/* Activity */}
         <div className="mb-4 bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
           <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between">
             <span>Live Onchain Activity</span>
             <span className="text-blue-400">by Alchemy</span>
           </p>
-          <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1">
-            {isLoadingTx ? (
-              <div className="text-[10px] text-white/30 text-center py-4 animate-pulse italic">Scanning ledger...</div>
-            ) : transactions.length > 0 ? (
-              transactions.slice(0, 3).map((tx: any, i: number) => (
+          <div className="space-y-2 max-h-[120px] overflow-y-auto">
+            {transactions.slice(0, 3).map((tx: any, i: number) => (
                 <div key={i} className="bg-white/5 border border-white/5 p-3 rounded-xl flex justify-between items-center text-[10px]">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs">{tx.asset === 'ETH' ? '🔵' : '📦'}</span>
-                    <p className="font-bold opacity-80 uppercase">{tx.category === 'erc721' ? 'NFT' : 'Transfer'}</p>
-                  </div>
-                  <p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)} {tx.asset}</p>
+                  <p className="font-bold opacity-80 uppercase">{tx.asset}</p>
+                  <p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p>
                 </div>
-              ))
-            ) : (
-              <div className="text-[10px] text-white/20 text-center py-4">No recent activity detected</div>
-            )}
+            ))}
           </div>
         </div>
       </main>
 
-      {/* НИЗ (ФУТЕР) */}
-      <footer className="mt-8 mb-10 text-center opacity-40 z-10">
-        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">
-          Powered by Base • Solo Building
-        </p>
+      <footer className="mt-8 mb-10 text-center opacity-40">
+        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Powered by Base • Solo Building</p>
       </footer>
     </div>
   );
