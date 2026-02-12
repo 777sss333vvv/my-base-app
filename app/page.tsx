@@ -8,7 +8,6 @@ import { sdk } from '@farcaster/frame-sdk';
 import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
 import { useAccount, useConnect, usePublicClient } from 'wagmi';
-import { getTier } from '../utils/scoreLogic'; 
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
@@ -103,6 +102,7 @@ export default function Page() {
   ], []);
 
   const getNewProphecy = () => {
+    if (isOracleLoading) return;
     setIsOracleLoading(true);
     setTimeout(() => {
       const randomMsg = prophecies[Math.floor(Math.random() * prophecies.length)];
@@ -137,10 +137,8 @@ export default function Page() {
         triggerBonus("ALREADY CLAIMED");
         return;
     }
-
     try {
         const result = await sdk.actions.addFrame();
-        // В Farcaster v2 addFrame возвращает результат. Если успешно:
         setOracleScore(prev => prev + 250);
         triggerBonus("+250 LOYALTY BONUS");
         localStorage.setItem('oracle_loyalty_v1', 'true');
@@ -208,15 +206,9 @@ export default function Page() {
             80% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(-20px); }
         }
-        .animate-oracle-sync {
-          animation: floatSync 3s ease-in-out infinite;
-        }
-        .animate-bounce-horizontal {
-          animation: bounceHorizontal 1s infinite;
-        }
-        .animate-fade-up {
-            animation: fadeUp 3s forwards;
-        }
+        .animate-oracle-sync { animation: floatSync 3s ease-in-out infinite; }
+        .animate-bounce-horizontal { animation: bounceHorizontal 1s infinite; }
+        .animate-fade-up { animation: fadeUp 3s forwards; }
       `}</style>
 
       {showBonus.show && (
@@ -231,7 +223,6 @@ export default function Page() {
       </header>
 
       <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
-        
         <div className="flex flex-col items-center text-center mb-6">
           <div className="relative">
             {user?.pfpUrl ? (
@@ -244,9 +235,7 @@ export default function Page() {
         </div>
 
         <div className="flex flex-col items-center mb-4 space-y-1">
-          <p className="text-[10px] font-black text-purple-300 uppercase tracking-[0.2em] animate-pulse">
-            🔮 How to play:
-          </p>
+          <p className="text-[10px] font-black text-purple-300 uppercase tracking-[0.2em] animate-pulse">🔮 How to play:</p>
           <div className="flex items-center gap-2 bg-black/20 px-4 py-1.5 rounded-full border border-white/10">
             <p className="text-[11px] font-bold text-white uppercase italic">Tap Oracle to start</p>
             <span className="text-lg animate-bounce-horizontal">👈</span>
@@ -256,20 +245,15 @@ export default function Page() {
         <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
           <button 
             onClick={getNewProphecy}
-            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 active:brightness-150 active:shadow-[0_0_30px_rgba(255,255,255,0.8)] transition-all overflow-hidden z-20"
+            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 active:scale-95 transition-all overflow-hidden z-20"
             style={{ width: '4.8rem', height: '4.8rem' }} 
           >
             <img src={TOKEN_IMAGE} className="w-full h-full object-cover" alt="Oracle" />
           </button>
-
           <div className="absolute left-12 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
             <span className="text-2xl animate-bounce-horizontal inline-block">👈</span>
           </div>
-
-          <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">
-            Oracle Prophecy
-          </div>
-          
+          <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-widest text-white shadow-lg">Oracle Prophecy</div>
           <p className={`text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center ${isOracleLoading ? 'animate-pulse opacity-50' : ''}`}>
             &quot;{oracleMessage}&quot;
           </p>
@@ -288,7 +272,6 @@ export default function Page() {
               />
             </Transaction>
           </div>
-
           <div className="flex-1 animate-oracle-sync" style={{ animationDelay: '0.4s' }}>
             <Transaction 
               chainId={8453} 
@@ -303,7 +286,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* --- LOYALTY SECTION --- */}
         {!isBonusClaimed ? (
           <button 
             onClick={handleAddApp}
@@ -339,9 +321,7 @@ export default function Page() {
           Share My Prophecy ↗
         </button>
 
-        <p className="text-[9px] text-center mb-6 opacity-60 font-bold uppercase tracking-tight">
-          Hold $USERBOX to boost your Oracle Score
-        </p>
+        <p className="text-[9px] text-center mb-6 opacity-60 font-bold uppercase tracking-tight">Hold $USERBOX to boost your Oracle Score</p>
 
         <div className="mb-4 bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
           <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/40 mb-4 flex justify-between items-center">
@@ -366,11 +346,8 @@ export default function Page() {
             )}
           </div>
         </div>
-
         <footer className="text-center pb-2">
-           <p className="text-[8px] text-white/30 uppercase tracking-[0.4em] font-bold">
-             Powered by Base • Solo Building
-           </p>
+           <p className="text-[8px] text-white/30 uppercase tracking-[0.4em] font-bold">Powered by Base • Solo Building</p>
         </footer>
       </main>
     </div>
