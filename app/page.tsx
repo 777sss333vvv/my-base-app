@@ -302,20 +302,33 @@ export default function Page() {
           Share My Prophecy ↗
         </button>
 
-        {/* СЕКЦИЯ КЛЕЙМА - ПОЯВЛЯЕТСЯ ТОЛЬКО ПОСЛЕ КЛИКА НА ОРАКУЛА */}
+{/* СЕКЦИЯ КЛЕЙМА - ПОЯВЛЯЕТСЯ ТОЛЬКО ПОСЛЕ КЛИКА НА ОРАКУЛА */}
         {isProphecyReceived && (
           <div className="mb-4 animate-slide-up">
             {!hasClaimedTokens ? (
               <Transaction 
                 chainId={8453} 
-                calls={[{ abi: TREASURY_ABI, to: TREASURY_ADDRESS as `0x${string}`, functionName: 'claim', args: [] } as any]}
+                calls={[
+                  { 
+                    to: "0x0039b008B0F0E60a7b42734147e52ca38c132416", 
+                    abi: TREASURY_ABI, 
+                    functionName: 'claim', 
+                    args: [] 
+                  }
+                ]}
                 onSuccess={() => {
                   setHasClaimedTokens(true);
                   localStorage.setItem('last_userbox_claim_v1', Date.now().toString());
                   triggerBonus("10,000 $USERBOX RECEIVED!");
                 }}
+                onError={(err) => {
+                  console.error("Transaction Error:", err);
+                }}
               >
-                <TransactionButton className="w-full bg-gradient-to-r from-[#FF00FF] to-[#0052FF] !text-white font-black py-4 rounded-2xl text-xs uppercase shadow-xl border-2 border-white/20" text="🎁 Claim 10,000 $USERBOX" />
+                <TransactionButton 
+                  className="w-full bg-gradient-to-r from-[#FF00FF] to-[#0052FF] !text-white font-black py-4 rounded-2xl text-xs uppercase shadow-xl border-2 border-white/20" 
+                  text="🎁 Claim 10,000 $USERBOX" 
+                />
               </Transaction>
             ) : (
               <button disabled className="w-full bg-green-500/10 border-2 border-green-500/30 text-green-400 font-black py-4 rounded-2xl text-[10px] uppercase cursor-not-allowed">
