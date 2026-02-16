@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
 import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
@@ -11,7 +11,18 @@ import { useAccount, useConnect, usePublicClient } from 'wagmi';
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
+const TREASURY_ADDRESS = '0x0039b008B0F0E60a7b42734147e52ca38c132416'; 
 const TOKEN_IMAGE = "/oracle.png"; 
+
+const TREASURY_ABI = [
+  {
+    "inputs": [],
+    "name": "claim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+] as const;
 
 export default function Page() {
   const [user, setUser] = useState<any>(null);
@@ -25,6 +36,10 @@ export default function Page() {
   const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
   const [isBonusClaimed, setIsBonusClaimed] = useState(false);
   
+  // СОСТОЯНИЯ ДЛЯ КЛЕЙМА
+  const [hasClaimedTokens, setHasClaimedTokens] = useState(false); 
+  const [isProphecyReceived, setIsProphecyReceived] = useState(false); 
+  
   const { isConnected, address: connectedAddress } = useAccount();
   const { connect, connectors } = useConnect();
   const publicClient = usePublicClient();
@@ -32,8 +47,16 @@ export default function Page() {
   useEffect(() => {
     const savedScore = localStorage.getItem('oracle_score_v5');
     if (savedScore) setOracleScore(Number(savedScore));
+    
     const claimed = localStorage.getItem('oracle_loyalty_v1');
     if (claimed === 'true') setIsBonusClaimed(true);
+
+    // Проверка таймера клейма (24 часа)
+    const lastClaim = localStorage.getItem('last_userbox_claim_v1');
+    if (lastClaim) {
+      const hoursSince = (Date.now() - Number(lastClaim)) / (1000 * 60 * 60);
+      if (hoursSince < 24) setHasClaimedTokens(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -45,7 +68,7 @@ export default function Page() {
     setTimeout(() => setShowBonus({ show: false, text: "" }), 4000);
   }, []);
 
-const prophecies = useMemo(() => [
+  const prophecies = useMemo(() => [
     "The charts whisper green. Patience is your strongest shield.",
     "A red candle is not the end, but a test of your faith.",
     "The Oracle sees a golden exit. Know your target.",
@@ -105,6 +128,7 @@ const prophecies = useMemo(() => [
       const randomMsg = prophecies[Math.floor(Math.random() * prophecies.length)];
       setOracleMessage(randomMsg);
       setIsOracleLoading(false);
+      setIsProphecyReceived(true); // Открываем кнопку клейма
     }, 600);
   };
 
@@ -122,10 +146,8 @@ const prophecies = useMemo(() => [
     if (!txHash) return;
     const usedHashes = JSON.parse(localStorage.getItem('oracle_used_hashes_v1') || '[]');
     if (usedHashes.includes(txHash)) return;
-
     usedHashes.push(txHash);
     localStorage.setItem('oracle_used_hashes_v1', JSON.stringify(usedHashes));
-
     setOracleScore(prev => prev + 100);
     setLastChoice(choice);
     triggerBonus("+100 ORACLE SCORE");
@@ -197,14 +219,12 @@ const prophecies = useMemo(() => [
         .animate-oracle-sync { animation: floatSync 3s ease-in-out infinite; }
         .animate-bounce-horizontal { animation: bounceHorizontal 1s infinite; }
         .animate-fade-center { animation: fadeUpCenter 4s forwards; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
-      {/* ТОСТЕР */}
       {showBonus.show && (
-          <div 
-            style={{ zIndex: 10000 }}
-            className="fixed top-24 left-1/2 bg-white text-[#FF00FF] px-8 py-3 rounded-full font-black text-lg shadow-[0_10px_40px_rgba(0,0,0,0.3)] animate-fade-center border-4 border-[#FF00FF] whitespace-nowrap pointer-events-none"
-          >
+          <div style={{ zIndex: 10000 }} className="fixed top-24 left-1/2 bg-white text-[#FF00FF] px-8 py-3 rounded-full font-black text-lg shadow-[0_10px_40px_rgba(0,0,0,0.3)] animate-fade-center border-4 border-[#FF00FF] whitespace-nowrap pointer-events-none">
               {showBonus.text} 🔮
           </div>
       )}
@@ -227,45 +247,31 @@ const prophecies = useMemo(() => [
           <h2 className="text-lg font-black mt-2 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
         </div>
 
-        {/* ORACLE (ROUND) */}
         <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
-          <button 
-            onClick={getNewProphecy}
-            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-all z-20 overflow-hidden ring-4 ring-blue-500/20"
-            style={{ width: '4.8rem', height: '4.8rem' }} 
-          >
+          <button onClick={getNewProphecy} className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-all z-20 overflow-hidden ring-4 ring-blue-500/20" style={{ width: '4.8rem', height: '4.8rem' }}>
             <img src={TOKEN_IMAGE} className="w-full h-full object-cover rounded-full" alt="Oracle" />
           </button>
           <div className="absolute left-12 top-1/2 -translate-y-1/2 z-30 pointer-events-none animate-bounce-horizontal text-2xl">👈</div>
           <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase text-white shadow-lg">Oracle Prophecy</div>
-          <p className="text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center">
+          <p className="text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center italic">
             &quot;{oracleMessage}&quot;
           </p>
         </div>
 
         <div className="flex gap-3 mb-2">
           <div className="flex-1">
-            <Transaction 
-              chainId={8453} 
-              calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
-              onSuccess={(res: any) => {
+            <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onSuccess={(res: any) => {
                 const h = res.transactionReceipts?.[0]?.transactionHash || res.transactionHash;
                 if (h) handleScoreUpdate('accept', h);
-              }}
-            >
+            }}>
               <TransactionButton className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF]" text="ACCEPT FATE (+100)" />
             </Transaction>
           </div>
-
           <div className="flex-1">
-            <Transaction 
-              chainId={8453} 
-              calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]}
-              onSuccess={(res: any) => {
+            <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onSuccess={(res: any) => {
                 const h = res.transactionReceipts?.[0]?.transactionHash || res.transactionHash;
                 if (h) handleScoreUpdate('defy', h);
-              }}
-            >
+            }}>
               <TransactionButton className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF]" text="DEFY FATE (+100)" />
             </Transaction>
           </div>
@@ -296,14 +302,37 @@ const prophecies = useMemo(() => [
           Share My Prophecy ↗
         </button>
 
+        {/* СЕКЦИЯ КЛЕЙМА - ПОЯВЛЯЕТСЯ ТОЛЬКО ПОСЛЕ КЛИКА НА ОРАКУЛА */}
+        {isProphecyReceived && (
+          <div className="mb-4 animate-slide-up">
+            {!hasClaimedTokens ? (
+              <Transaction 
+                chainId={8453} 
+                calls={[{ abi: TREASURY_ABI, to: TREASURY_ADDRESS as `0x${string}`, functionName: 'claim', args: [] } as any]}
+                onSuccess={() => {
+                  setHasClaimedTokens(true);
+                  localStorage.setItem('last_userbox_claim_v1', Date.now().toString());
+                  triggerBonus("10,000 $USERBOX RECEIVED!");
+                }}
+              >
+                <TransactionButton className="w-full bg-gradient-to-r from-[#FF00FF] to-[#0052FF] !text-white font-black py-4 rounded-2xl text-xs uppercase shadow-xl border-2 border-white/20" text="🎁 Claim 10,000 $USERBOX" />
+              </Transaction>
+            ) : (
+              <button disabled className="w-full bg-green-500/10 border-2 border-green-500/30 text-green-400 font-black py-4 rounded-2xl text-[10px] uppercase cursor-not-allowed">
+                ✅ $USERBOX Claimed (Back in 24h)
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
           <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between">
             <span>Live Onchain Activity</span>
             <span className="text-blue-400">by Alchemy</span>
           </p>
-          <div className="space-y-2 max-h-[100px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[100px] overflow-y-auto pr-1 text-[10px]">
             {transactions.slice(0, 3).map((tx: any, i: number) => (
-                <div key={i} className="bg-white/5 border border-white/5 p-3 rounded-xl flex justify-between items-center text-[10px]">
+                <div key={i} className="bg-white/5 border border-white/5 p-3 rounded-xl flex justify-between items-center">
                   <p className="font-bold opacity-80 uppercase">{tx.asset}</p>
                   <p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p>
                 </div>
@@ -312,11 +341,8 @@ const prophecies = useMemo(() => [
         </div>
       </main>
 
-      {/* ТА САМАЯ СТРОЧКА — ТЕПЕРЬ ОНА ТУТ НАВСЕГДА */}
       <footer className="mt-8 mb-10 text-center opacity-40">
-        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">
-          Powered by Base • Solo Building
-        </p>
+        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Powered by Base • Solo Building</p>
       </footer>
     </div>
   );
