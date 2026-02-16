@@ -305,41 +305,64 @@ const handleShare = useCallback(() => {
           </div>
         </div>
 
-        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">
+<button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">
           Share My Prophecy ↗
         </button>
 
-{/* СЕКЦИЯ КЛЕЙМА - ПОЯВЛЯЕТСЯ ТОЛЬКО ПОСЛЕ КЛИКА НА ОРАКУЛА */}
-        {isProphecyReceived && (
-          <div className="mb-4 animate-slide-up">
-            {!hasClaimedTokens ? (
-<Transaction 
-  chainId={8453} 
-  calls={[
-    { 
-      to: "0x0039b008B0F0E60a7b42734147e52ca38c132416", 
-      data: "0x4e71d92d", // Это закодированный вызов функции claim()
-      value: BigInt(0)
-    }
-  ]}
-  onSuccess={() => {
-    setHasClaimedTokens(true);
-    localStorage.setItem('last_userbox_claim_v1', Date.now().toString());
-    triggerBonus("10,000 $USERBOX RECEIVED!");
-  }}
->
-  <TransactionButton 
-    className="w-full bg-gradient-to-r from-[#FF00FF] to-[#0052FF] !text-white font-black py-4 rounded-2xl text-xs uppercase shadow-xl border-2 border-white/20" 
-    text="🎁 Claim 10,000 $USERBOX" 
-  />
-</Transaction>
+        {/* НОВАЯ СЕКЦИЯ КЛЕЙМА С ПОДСКАЗКАМИ */}
+        <div className="mb-4">
+          <div className="text-center mb-2 animate-slide-up">
+            {!isProphecyReceived ? (
+              <p className="text-[10px] font-black text-white/70 uppercase tracking-widest">
+                <span className="text-red-500 text-lg mr-1">●</span> Step 1: Tap the Oracle Head
+              </p>
+            ) : !hasClaimedTokens ? (
+              <p className="text-[10px] font-black text-white uppercase tracking-widest animate-pulse">
+                <span className="text-green-500 text-lg mr-1">●</span> Step 2: Claim your tokens!
+              </p>
+            ) : null}
+          </div>
+
+          {!hasClaimedTokens ? (
+            isProphecyReceived ? (
+              <div className="animate-slide-up">
+                <Transaction 
+                  chainId={8453} 
+                  calls={[
+                    { 
+                      to: "0x0039b008B0F0E60a7b42734147e52ca38c132416", 
+                      data: "0x4e71d92d", 
+                      value: BigInt(0)
+                    }
+                  ]}
+                  onSuccess={() => {
+                    setHasClaimedTokens(true);
+                    localStorage.setItem('last_userbox_claim_v1', Date.now().toString());
+                    triggerBonus("10,000 $USERBOX RECEIVED!");
+                  }}
+                >
+                  <TransactionButton 
+                    className="w-full bg-gradient-to-r from-[#FF00FF] to-[#0052FF] !text-white font-black py-4 rounded-2xl text-xs uppercase shadow-xl border-2 border-white/20" 
+                    text="🎁 Claim 10,000 $USERBOX" 
+                  />
+                </Transaction>
+              </div>
             ) : (
+              <button 
+                onClick={getNewProphecy}
+                className="w-full bg-black/40 border-2 border-white/10 text-white/40 font-black py-4 rounded-2xl text-[10px] uppercase cursor-pointer hover:border-white/30 transition-all"
+              >
+                👇 Tap Oracle Head to Unlock Claim
+              </button>
+            )
+          ) : (
+            <div className="animate-slide-up">
               <button disabled className="w-full bg-green-500/10 border-2 border-green-500/30 text-green-400 font-black py-4 rounded-2xl text-[10px] uppercase cursor-not-allowed">
                 ✅ $USERBOX Claimed (Back in 24h)
               </button>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
 
         <div className="bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
           <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between">
