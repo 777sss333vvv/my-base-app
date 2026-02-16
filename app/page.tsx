@@ -132,11 +132,18 @@ export default function Page() {
     }, 600);
   };
 
-  const handleShare = useCallback(() => {
+const handleShare = useCallback(() => {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                : lastChoice === 'defy' ? `⚔️ I defy my fate! The prophecy was: "${oracleMessage}"`
                : `🔮 My Oracle Prophecy: "${oracleMessage}"`;
-    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount}\n✨ Oracle Score: ${oracleScore}\n\nWhat choice would you make?`;
+
+    const shareText = `${intro}\n\n` +
+                      `🛡️ Base Score: ${txCount}\n` +
+                      `✨ Oracle Score: ${oracleScore}\n\n` +
+                      `🎁 Get your daily 10,000 $USERBOX!\n` +
+                      `Tap the Oracle's head & hit "Claim".\n\n` +
+                      `Want more score? Accept or Defy your fate inside! ⚡`;
+
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
     sdk.actions.openUrl(shareUrl);
