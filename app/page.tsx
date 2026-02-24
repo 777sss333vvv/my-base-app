@@ -11,10 +11,21 @@ import { useAccount, useConnect, usePublicClient } from 'wagmi';
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-const TREASURY_ADDRESS = '0x0039b008B0F0E60a7b42734147e52ca38c132416'; 
+// ОБНОВЛЕННЫЙ АДРЕС КОНТРАКТА V2
+const TREASURY_ADDRESS = '0xC652871ccDB0Afb4a48fE7e0bf974Cf01E6e3057'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
+// ОБНОВЛЕННЫЙ ABI С СОБЫТИЕМ
 const TREASURY_ABI = [
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "user", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "ProphecyFulfilled",
+    "type": "event"
+  },
   {
     "inputs": [],
     "name": "claim",
@@ -36,7 +47,6 @@ export default function Page() {
   const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
   const [isBonusClaimed, setIsBonusClaimed] = useState(false);
   
-  // СОСТОЯНИЯ ДЛЯ КЛЕЙМА
   const [hasClaimedTokens, setHasClaimedTokens] = useState(false); 
   const [isProphecyReceived, setIsProphecyReceived] = useState(false); 
   
@@ -52,7 +62,7 @@ export default function Page() {
     if (claimed === 'true') setIsBonusClaimed(true);
 
     // Проверка таймера клейма (24 часа)
-    const lastClaim = localStorage.getItem('last_userbox_claim_v1');
+    const lastClaim = localStorage.getItem('last_userbox_claim_v2'); // Обновили версию ключа для нового контракта
     if (lastClaim) {
       const hoursSince = (Date.now() - Number(lastClaim)) / (1000 * 60 * 60);
       if (hoursSince < 24) setHasClaimedTokens(true);
@@ -128,7 +138,7 @@ export default function Page() {
       const randomMsg = prophecies[Math.floor(Math.random() * prophecies.length)];
       setOracleMessage(randomMsg);
       setIsOracleLoading(false);
-      setIsProphecyReceived(true); // Открываем кнопку клейма
+      setIsProphecyReceived(true);
     }, 600);
   };
 
@@ -140,7 +150,7 @@ const handleShare = useCallback(() => {
     const shareText = `${intro}\n\n` +
                       `🛡️ Base Score: ${txCount}\n` +
                       `✨ Oracle Score: ${oracleScore}\n\n` +
-                      `🎁 Get your daily 10,000 $USERBOX!\n` +
+                      `🎁 Get your daily 15,000 $USERBOX!\n` + // Обновлено на 15,000
                       `Tap the Oracle's head & hit "Claim".\n\n` +
                       `Want more score? Accept or Defy your fate inside! ⚡`;
 
@@ -309,7 +319,7 @@ const handleShare = useCallback(() => {
           Share My Prophecy ↗
         </button>
 
-        {/* НОВАЯ СЕКЦИЯ КЛЕЙМА С ПОДСКАЗКАМИ */}
+        {/* НОВАЯ СЕКЦИЯ КЛЕЙМА С ОБНОВЛЕННОЙ СУММОЙ 15,000 */}
         <div className="mb-4">
           <div className="text-center mb-2 animate-slide-up">
             {!isProphecyReceived ? (
@@ -330,20 +340,21 @@ const handleShare = useCallback(() => {
                   chainId={8453} 
                   calls={[
                     { 
-                      to: "0x0039b008B0F0E60a7b42734147e52ca38c132416", 
+                      to: "0xC652871ccDB0Afb4a48fE7e0bf974Cf01E6e3057", // НОВЫЙ АДРЕС
                       data: "0x4e71d92d", 
                       value: BigInt(0)
                     }
                   ]}
                   onSuccess={() => {
                     setHasClaimedTokens(true);
-                    localStorage.setItem('last_userbox_claim_v1', Date.now().toString());
-                    triggerBonus("10,000 $USERBOX RECEIVED!");
+                    // Обновили ключ в localStorage для нового цикла
+                    localStorage.setItem('last_userbox_claim_v2', Date.now().toString());
+                    triggerBonus("15,000 $USERBOX RECEIVED!");
                   }}
                 >
                   <TransactionButton 
                     className="w-full bg-gradient-to-r from-[#FF00FF] to-[#0052FF] !text-white font-black py-4 rounded-2xl text-xs uppercase shadow-xl border-2 border-white/20" 
-                    text="🎁 Claim 10,000 $USERBOX" 
+                    text="🎁 Claim 15,000 $USERBOX" 
                   />
                 </Transaction>
               </div>
