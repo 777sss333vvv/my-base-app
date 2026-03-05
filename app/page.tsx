@@ -368,9 +368,12 @@ const handleShare = useCallback(() => {
             )
           ) : (
             <div className="animate-slide-up">
-              <button disabled className="w-full bg-green-500/10 border-2 border-green-500/30 text-green-400 font-black py-4 rounded-2xl text-[10px] uppercase cursor-not-allowed">
-                ✅ $USERBOX Claimed (Back in 24h)
-              </button>
+              <button 
+  disabled 
+  className="w-full bg-gray-500/20 border-2 border-white/10 text-white/40 font-black py-4 rounded-2xl text-[10px] uppercase cursor-not-allowed"
+>
+  🛠 Claim Under Reconstruction (Back Soon)
+</button>
             </div>
           )}
         </div>
