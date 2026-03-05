@@ -11,11 +11,9 @@ import { useAccount, useConnect, usePublicClient } from 'wagmi';
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-// ОБНОВЛЕННЫЙ АДРЕС КОНТРАКТА V2
 const TREASURY_ADDRESS = '0xC652871ccDB0Afb4a48fE7e0bf974Cf01E6e3057'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
-// ОБНОВЛЕННЫЙ ABI С СОБЫТИЕМ
 const TREASURY_ABI = [
   {
     "anonymous": false,
@@ -61,8 +59,7 @@ export default function Page() {
     const claimed = localStorage.getItem('oracle_loyalty_v1');
     if (claimed === 'true') setIsBonusClaimed(true);
 
-    // Проверка таймера клейма (24 часа)
-    const lastClaim = localStorage.getItem('last_userbox_claim_v2'); // Обновили версию ключа для нового контракта
+    const lastClaim = localStorage.getItem('last_userbox_claim_v2');
     if (lastClaim) {
       const hoursSince = (Date.now() - Number(lastClaim)) / (1000 * 60 * 60);
       if (hoursSince < 24) setHasClaimedTokens(true);
@@ -142,7 +139,7 @@ export default function Page() {
     }, 600);
   };
 
-const handleShare = useCallback(() => {
+  const handleShare = useCallback(() => {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                : lastChoice === 'defy' ? `⚔️ I defy my fate! The prophecy was: "${oracleMessage}"`
                : `🔮 My Oracle Prophecy: "${oracleMessage}"`;
@@ -150,7 +147,7 @@ const handleShare = useCallback(() => {
     const shareText = `${intro}\n\n` +
                       `🛡️ Base Score: ${txCount}\n` +
                       `✨ Oracle Score: ${oracleScore}\n\n` +
-                      `🎁 Get your daily 15,000 $USERBOX!\n` + // Обновлено на 15,000
+                      `🎁 Get your daily 15,000 $USERBOX!\n` + 
                       `Tap the Oracle's head & hit "Claim".\n\n` +
                       `Want more score? Accept or Defy your fate inside! ⚡`;
 
@@ -270,7 +267,7 @@ const handleShare = useCallback(() => {
           </button>
           <div className="absolute left-12 top-1/2 -translate-y-1/2 z-30 pointer-events-none animate-bounce-horizontal text-2xl">👈</div>
           <div className="absolute -top-2.5 left-12 bg-[#0052FF] border border-[#FF00FF]/50 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase text-white shadow-lg">Oracle Prophecy</div>
-          <p className="text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center italic">
+          <p className="text-sm italic font-medium pl-12 pr-2 leading-relaxed text-center">
             &quot;{oracleMessage}&quot;
           </p>
         </div>
@@ -315,67 +312,29 @@ const handleShare = useCallback(() => {
           </div>
         </div>
 
-<button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">
+        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">
           Share My Prophecy ↗
         </button>
 
-        {/* НОВАЯ СЕКЦИЯ КЛЕЙМА С ОБНОВЛЕННОЙ СУММОЙ 15,000 */}
+        {/* НОВАЯ СЕКЦИЯ КЛЕЙМА (ВРЕМЕННО ЗАБЛОКИРОВАНА ДЛЯ ВСЕХ) */}
         <div className="mb-4">
           <div className="text-center mb-2 animate-slide-up">
-            {!isProphecyReceived ? (
-              <p className="text-[10px] font-black text-white/70 uppercase tracking-widest">
-                <span className="text-red-500 text-lg mr-1">●</span> Step 1: Tap the Oracle Head
-              </p>
-            ) : !hasClaimedTokens ? (
-              <p className="text-[10px] font-black text-white uppercase tracking-widest animate-pulse">
-                <span className="text-green-500 text-lg mr-1">●</span> Step 2: Claim your tokens!
-              </p>
-            ) : null}
+            <p className="text-[10px] font-black text-white/70 uppercase tracking-widest">
+              <span className="text-blue-500 text-lg mr-1">●</span> V3 Upgrade in Progress
+            </p>
           </div>
 
-          {!hasClaimedTokens ? (
-            isProphecyReceived ? (
-              <div className="animate-slide-up">
-                <Transaction 
-                  chainId={8453} 
-                  calls={[
-                    { 
-                      to: "0xC652871ccDB0Afb4a48fE7e0bf974Cf01E6e3057", // НОВЫЙ АДРЕС
-                      data: "0x4e71d92d", 
-                      value: BigInt(0)
-                    }
-                  ]}
-                  onSuccess={() => {
-                    setHasClaimedTokens(true);
-                    // Обновили ключ в localStorage для нового цикла
-                    localStorage.setItem('last_userbox_claim_v2', Date.now().toString());
-                    triggerBonus("15,000 $USERBOX RECEIVED!");
-                  }}
-                >
-                  <TransactionButton 
-                    className="w-full bg-gradient-to-r from-[#FF00FF] to-[#0052FF] !text-white font-black py-4 rounded-2xl text-xs uppercase shadow-xl border-2 border-white/20" 
-                    text="🎁 Claim 15,000 $USERBOX" 
-                  />
-                </Transaction>
-              </div>
-            ) : (
-              <button 
-                onClick={getNewProphecy}
-                className="w-full bg-black/40 border-2 border-white/10 text-white/40 font-black py-4 rounded-2xl text-[10px] uppercase cursor-pointer hover:border-white/30 transition-all"
-              >
-                👇 Tap Oracle Head to Unlock Claim
-              </button>
-            )
-          ) : (
-            <div className="animate-slide-up">
-              <button 
-  disabled 
-  className="w-full bg-gray-500/20 border-2 border-white/10 text-white/40 font-black py-4 rounded-2xl text-[10px] uppercase cursor-not-allowed"
->
-  🛠 Claim Under Reconstruction (Back Soon)
-</button>
-            </div>
-          )}
+          <div className="animate-slide-up">
+            <button 
+              disabled 
+              className="w-full bg-gray-500/20 border-2 border-white/10 text-white/40 font-black py-4 rounded-2xl text-[10px] uppercase cursor-not-allowed shadow-inner"
+            >
+              🛠 Claim Under Reconstruction (Back Soon)
+            </button>
+            <p className="text-[8px] text-center mt-2 text-white/30 uppercase font-bold tracking-tighter">
+              Oracle is being upgraded to V3 for enhanced security
+            </p>
+          </div>
         </div>
 
         <div className="bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
