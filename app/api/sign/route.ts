@@ -15,18 +15,19 @@ export async function POST(req: Request) {
       }, { status: 500 });
     }
 
-    // @ts-ignore
+    // @ts-expect-error: ethers v5/v6 compatibility
     const provider = new ethers.providers.JsonRpcProvider(`https://base-mainnet.g.alchemy.com/v2/${aKey}`);
-    // @ts-ignore
+    // @ts-expect-error: ethers v5/v6 compatibility
     const wallet = new ethers.Wallet(pKey, provider);
 
-    // @ts-ignore
+    // @ts-expect-error: ethers v5/v6 compatibility
     const messageHash = ethers.utils.solidityKeccak256(["address"], [userAddress]);
-    // @ts-ignore
+    // @ts-expect-error: ethers v5/v6 compatibility
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
-  } catch (err: any) {
-    return NextResponse.json({ error: 'Failed to sign', details: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to sign', details: errorMessage }, { status: 500 });
   }
 }
