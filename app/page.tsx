@@ -64,21 +64,39 @@ export default function Page() {
   // Функция получения подписи от нашего нового API на Vercel
   const getSignatureFromOracle = async () => {
     const targetAddress = connectedAddress || user?.custodyAddress;
-    if (!targetAddress) return;
+    
+    // ПРОВЕРКА 1: Видит ли приложение твой адрес?
+    if (!targetAddress) {
+      alert("Ошибка: Адрес кошелька не найден. Сначала подключись!");
+      return;
+    }
 
+    // ПРОВЕРКА 2: Сработал ли клик по голове?
+    alert("Клик засчитан! Запрашиваю подпись для: " + targetAddress);
+    
     setIsSigning(true);
+
     try {
       const response = await fetch('/api/sign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userAddress: targetAddress }),
       });
+      
       const data = await response.json();
+      
       if (data.signature) {
+        // УСПЕХ: Подпись пришла
         setOracleSignature(data.signature);
         triggerBonus("ORACLE SIGNED V3");
+        alert("Успех! Подпись получена, кнопка должна ожить.");
+      } else {
+        // ОШИБКА API: (например, нет ключа в Vercel)
+        alert("Ошибка API: " + (data.error || "Неизвестная ошибка"));
       }
     } catch (err) {
+      // ОШИБКА СЕТИ: (например, неверный путь /api/sign)
+      alert("Сетевая ошибка: Проверь консоль браузера");
       console.error("Signing failed", err);
     } finally {
       setIsSigning(false);
@@ -113,13 +131,25 @@ export default function Page() {
     }, 600);
   };
 
-  const handleShare = useCallback(() => {
-    const intro = `🔮 My Oracle Prophecy: "${oracleMessage}"`;
-    const shareText = `${intro}\n\n✨ Oracle Score: ${oracleScore}\n🎁 Claiming my daily $USERBOX V3!`;
+const handleShare = useCallback(() => {
+    // Выбираем заголовок в зависимости от того, что нажал юзер: Accept или Defy
+    const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
+                 : lastChoice === 'defy' ? `⚔️ I defy my fate! The prophecy was: "${oracleMessage}"`
+                 : `🔮 My Oracle Prophecy: "${oracleMessage}"`;
+
+    // Собираем полный текст (возвращаем Base Score и нормальную структуру)
+    const shareText = `${intro}\n\n` +
+                      `🛡️ Base Score: ${txCount ?? 0}\n` +
+                      `✨ Oracle Score: ${oracleScore}\n\n` +
+                      `🎁 Claiming my daily $USERBOX V3 reward!\n` + 
+                      `Tap the Oracle's head & hit "Claim".\n\n` +
+                      `Want more score? Accept or Defy your fate inside! ⚡`;
+
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
+    
     sdk.actions.openUrl(shareUrl);
-  }, [oracleMessage, oracleScore]);
+  }, [oracleMessage, txCount, oracleScore, lastChoice]); // Добавили зависимости, чтобы данные не устаревали
 
   const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', txHash: string) => {
     if (!txHash) return;
