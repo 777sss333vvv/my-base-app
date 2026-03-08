@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ethers } from 'ethers';
+import * as ethers from 'ethers';
 
 export async function POST(req: Request) {
   try {
@@ -9,25 +9,21 @@ export async function POST(req: Request) {
     const aKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
 
     if (!pKey || !aKey) {
-      return NextResponse.json({ 
-        error: 'Config error', 
-        details: `P:${!!pKey} A:${!!aKey}` 
-      }, { status: 500 });
+      return NextResponse.json({ error: 'Config error' }, { status: 500 });
     }
 
-    // @ts-expect-error: ethers v5/v6 compatibility
-    const provider = new ethers.providers.JsonRpcProvider(`https://base-mainnet.g.alchemy.com/v2/${aKey}`);
-    // @ts-expect-error: ethers v5/v6 compatibility
-    const wallet = new ethers.Wallet(pKey, provider);
+    // Используем "as any" только в одном месте, чтобы обойти проверку типов аккуратно
+    const eth: any = ethers;
+    
+    const provider = new eth.providers.JsonRpcProvider(`https://base-mainnet.g.alchemy.com/v2/${aKey}`);
+    const wallet = new eth.Wallet(pKey, provider);
 
-    // @ts-expect-error: ethers v5/v6 compatibility
-    const messageHash = ethers.utils.solidityKeccak256(["address"], [userAddress]);
-    // @ts-expect-error: ethers v5/v6 compatibility
-    const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
+    const messageHash = eth.utils.solidityKeccak256(["address"], [userAddress]);
+    const signature = await wallet.signMessage(eth.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ error: 'Failed to sign', details: errorMessage }, { status: 500 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown';
+    return NextResponse.json({ error: 'Sign failed', details: msg }, { status: 500 });
   }
 }
