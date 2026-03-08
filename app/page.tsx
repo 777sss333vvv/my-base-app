@@ -62,18 +62,15 @@ export default function Page() {
   }, []);
 
   // Функция получения подписи от нашего нового API на Vercel
-  const getSignatureFromOracle = async () => {
+const getSignatureFromOracle = async () => {
     const targetAddress = connectedAddress || user?.custodyAddress;
     
-    // ПРОВЕРКА 1: Видит ли приложение твой адрес?
     if (!targetAddress) {
-      alert("Ошибка: Адрес кошелька не найден. Сначала подключись!");
+      alert("Status: Address Missing");
       return;
     }
 
-    // ПРОВЕРКА 2: Сработал ли клик по голове?
-    alert("Клик засчитан! Запрашиваю подпись для: " + targetAddress);
-    
+    alert("Stage A: Requesting Signature...");
     setIsSigning(true);
 
     try {
@@ -86,17 +83,14 @@ export default function Page() {
       const data = await response.json();
       
       if (data.signature) {
-        // УСПЕХ: Подпись пришла
         setOracleSignature(data.signature);
         triggerBonus("ORACLE SIGNED V3");
-        alert("Успех! Подпись получена, кнопка должна ожить.");
+        alert("Stage B: Signature Received");
       } else {
-        // ОШИБКА API: (например, нет ключа в Vercel)
-        alert("Ошибка API: " + (data.error || "Неизвестная ошибка"));
+        alert("Stage C: API Error - " + (data.error || "Unknown"));
       }
     } catch (err) {
-      // ОШИБКА СЕТИ: (например, неверный путь /api/sign)
-      alert("Сетевая ошибка: Проверь консоль браузера");
+      alert("Stage D: Network Error");
       console.error("Signing failed", err);
     } finally {
       setIsSigning(false);
