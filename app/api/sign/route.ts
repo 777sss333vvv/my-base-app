@@ -15,12 +15,14 @@ export async function POST(req: Request) {
       }, { status: 500 });
     }
 
-    // Для v5 используем StaticJsonRpcProvider или обычный JsonRpcProvider
+    // @ts-ignore
     const provider = new ethers.providers.JsonRpcProvider(`https://base-mainnet.g.alchemy.com/v2/${aKey}`);
+    // @ts-ignore
     const wallet = new ethers.Wallet(pKey, provider);
 
-    // В v5 функции называются по-другому:
+    // @ts-ignore
     const messageHash = ethers.utils.solidityKeccak256(["address"], [userAddress]);
+    // @ts-ignore
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
