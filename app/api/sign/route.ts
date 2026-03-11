@@ -10,19 +10,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Config error: Key missing' }, { status: 500 });
     }
 
-    // Создаем кошелек напрямую (для подписи провайдер не нужен)
+    // Создаем кошелек для подписи (провайдер не нужен)
     const WalletClass = ethers.Wallet as unknown as {
       new (key: string): ethers.Wallet;
     };
     const wallet = new WalletClass(pKey);
 
-    // Хешируем: адрес + время (в точности как в Solidity строке 63)
+    // ВАЖНО: Превращаем время в BigNumber для точного соответствия uint256 в Solidity
+    const timeValue = ethers.BigNumber.from(lastClaimTime);
+
+    // Генерируем хеш точно по логике контракта: keccak256(abi.encodePacked(address, uint256))
     const messageHash = ethers.utils.solidityKeccak256(
       ["address", "uint256"],
-      [userAddress, lastClaimTime]
+      [userAddress, timeValue]
     );
 
-    // Подписываем массив байтов
+    // Подписываем бинарное представление хеша
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
