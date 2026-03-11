@@ -6,18 +6,22 @@ export async function POST(req: Request) {
     const { userAddress } = await req.json();
     
     const pKey = process.env.ORACLE_PRIVATE_KEY;
-    if (!pKey) return NextResponse.json({ error: 'Config error' }, { status: 500 });
+    if (!pKey) {
+      return NextResponse.json({ error: 'Config error: Key missing' }, { status: 500 });
+    }
 
     const wallet = new ethers.Wallet(pKey);
 
-    // Хэшируем только адрес по стандарту Solidity solidityKeccak256
+    // Хэшируем только адрес кошелька
     const messageHash = ethers.utils.solidityKeccak256(["address"], [userAddress]);
 
-    // Подписываем (wallet.signMessage автоматически добавляет префикс Ethereum Signed Message)
+    // Подписываем
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
-  } catch (err: any) {
-    return NextResponse.json({ error: 'Sign failed', details: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    // Исправляем ошибку ESLint: типизируем err как unknown и проверяем тип
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: 'Sign failed', details: errorMessage }, { status: 500 });
   }
 }
