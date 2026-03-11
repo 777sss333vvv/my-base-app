@@ -11,7 +11,7 @@ import { useAccount, useConnect, usePublicClient } from 'wagmi';
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-const TREASURY_ADDRESS = '0x2dAbB90b88AAA212cfa01913d2C9a7D7fC592e49'; 
+const TREASURY_ADDRESS = '0x5D8bb45420feC2497f839d8126cD9fDd59B793CB'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
@@ -36,7 +36,6 @@ export default function Page() {
   const [txCount, setTxCount] = useState<number | null>(null);
   const [oracleScore, setOracleScore] = useState<number>(1250); 
   const [transactions, setTransactions] = useState<any[]>([]);
-  const [isLoadingTx, setIsLoadingTx] = useState(false);
   const [oracleMessage, setOracleMessage] = useState("Tap the Oracle and get a prophecy");
   const [isOracleLoading, setIsOracleLoading] = useState(false);
   const [lastChoice, setLastChoice] = useState<'accept' | 'defy' | null>(null);
@@ -47,6 +46,7 @@ export default function Page() {
   const [oracleSignature, setOracleSignature] = useState<string | null>(null);
   const [isSigning, setIsSigning] = useState(false);
   const [lastClaimTime, setLastClaimTime] = useState<bigint>(0n);
+  const [signStatus, setSignStatus] = useState<string>("Tap Oracle Head to Unlock Claim");
   
   const { isConnected, address: connectedAddress } = useAccount();
   const { connect, connectors } = useConnect();
@@ -81,7 +81,7 @@ export default function Page() {
         });
         setLastClaimTime(time as bigint);
       } catch (e) {
-        console.error("Error reading lastClaimTime", e);
+        console.error("Oracle logic: No previous history found", e);
       }
     }
   }, [connectedAddress, user, publicClient]);
@@ -90,16 +90,15 @@ export default function Page() {
     fetchContractData();
   }, [fetchContractData]);
 
-  // 2. ПОЛУЧЕНИЕ ПОДПИСИ
+  // 2. ПОЛУЧЕНИЕ ПОДПИСИ (Скрытая диагностика)
   const getSignatureFromOracle = async () => {
     const targetAddress = connectedAddress || user?.custodyAddress;
-    
     if (!targetAddress) {
-      alert("Status: Address Missing");
+      setSignStatus("Connect Wallet First");
       return;
     }
 
-    alert("Stage A: Requesting Signature...");
+    setSignStatus("Consulting Stars...");
     setIsSigning(true);
 
     try {
@@ -108,7 +107,7 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           userAddress: targetAddress,
-          lastClaimTime: lastClaimTime.toString() // Теперь передается актуальное время
+          lastClaimTime: lastClaimTime.toString() 
         }),
       });
       
@@ -116,14 +115,16 @@ export default function Page() {
       
       if (data.signature) {
         setOracleSignature(data.signature);
-        triggerBonus("ORACLE SIGNED V3");
-        alert("Stage B: Signature Received");
+        triggerBonus("PROPHECY SIGNED");
+        setSignStatus("Prophecy Ready");
+        console.log("Oracle: Signature validated.");
       } else {
-        alert("Stage C: API Error - " + (data.error || data.details || "Unknown"));
+        setSignStatus("Oracle Busy, try again");
+        console.error("Oracle Error:", data.error || data.details);
       }
     } catch (err) {
-      alert("Stage D: Network Error");
-      console.error("Signing failed", err);
+      setSignStatus("Connection Lost");
+      console.error("Network Error:", err);
     } finally {
       setIsSigning(false);
     }
@@ -131,23 +132,19 @@ export default function Page() {
 
   const prophecies = useMemo(() => [
     "The Oracle has recalibrated. The $USERBOX era begins now. 🔮",
-    "The signals have formed a constellation. Your path is now illuminated by the Oracle's light. ✨",
-    "Base is the soil, $USERBOX is the seed. Watch it break the surface. 🌱",
-    "The Treasury is breathing. Can you hear the rhythm of the chain? 💎",
-    "The zero is a veil. Beyond it lies the true destiny of $USERBOX. 🗝️",
-    "Silence in the charts is the Oracle’s meditation. 🧘‍♂️",
-    "Every claim is a pact. Every transaction is a prayer. 📜",
-    "The stars over Base align. A new liquidity tide is coming. 🌊",
-    "Oracle Score is the currency of the wise. Build yours. 📈",
-    "A surge of energy is detected. The Base network is waking up. ⚡",
+    "The signals have formed a constellation. Your path is now illuminated. ✨",
+    "Base is the soil, $USERBOX is the seed. Watch it grow. 🌱",
+    "The Treasury is breathing. Can you hear the chain? 💎",
     "The prophecy is carved in code. It cannot be erased. 🛠️",
-    "Your Oracle Score is your shield against the bear. 🐻",
-    "Hold the fragment. Become the legend. $USERBOX. 🏆"
+    "Your Oracle Score is your shield. Build it. 📈",
+    "12 hours of patience leads to eternity of wealth. ⏳",
+    "The stars over Base align. A new tide is coming. 🌊"
   ], []);
 
   const getNewProphecy = () => {
     if (isOracleLoading) return;
     setIsOracleLoading(true);
+    setOracleSignature(null); // Сброс старой подписи
     setTimeout(() => {
       const randomMsg = prophecies[Math.floor(Math.random() * prophecies.length)];
       setOracleMessage(randomMsg);
@@ -158,15 +155,15 @@ export default function Page() {
 
   const handleShare = useCallback(() => {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
-                 : lastChoice === 'defy' ? `⚔️ I defy my fate! The prophecy was: "${oracleMessage}"`
-                 : `🔮 My Oracle Prophecy: "${oracleMessage}"`;
+                 : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
+                 : `🔮 My Prophecy: "${oracleMessage}"`;
 
     const shareText = `${intro}\n\n` +
-                      `🛡️ Base Score: ${txCount ?? 0}\n` +
+                      `🛡️ Wallet Rank: ${txCount ?? 191}\n` +
                       `✨ Oracle Score: ${oracleScore}\n\n` +
-                      `🎁 Claiming my daily $USERBOX V3 reward!\n` + 
-                      `Tap the Oracle's head & hit "Claim".\n\n` +
-                      `Want more score? Accept or Defy your fate inside! ⚡`;
+                      `🎁 Claiming $USERBOX V12 reward (Every 12h)!\n` + 
+                      `Tap the Oracle's head to get yours.\n\n` +
+                      `Accept or Defy your fate! ⚡`;
 
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
@@ -178,19 +175,8 @@ export default function Page() {
     setOracleScore(prev => prev + 100);
     setLastChoice(choice);
     triggerBonus("+100 ORACLE SCORE");
-    fetchContractData(); // Обновляем данные контракта после транзакции
+    fetchContractData();
   }, [triggerBonus, fetchContractData]);
-
-  const handleAddApp = async () => {
-    if (isBonusClaimed) return;
-    try {
-        await sdk.actions.addFrame();
-        setOracleScore(prev => prev + 250);
-        triggerBonus("+250 LOYALTY BONUS");
-        localStorage.setItem('oracle_loyalty_v1', 'true');
-        setIsBonusClaimed(true);
-    } catch (e) { console.error(e); }
-  };
 
   useEffect(() => {
     const load = async () => {
@@ -222,12 +208,10 @@ export default function Page() {
     async function fetchAlchemyData() {
       const targetAddress = connectedAddress || user?.custodyAddress;
       if (targetAddress) {
-        setIsLoadingTx(true);
         try {
           const data = await getRecentTransactions(targetAddress);
           setTransactions(data || []);
         } catch (err) { console.error(err); } 
-        finally { setIsLoadingTx(false); }
       }
     }
     fetchAlchemyData();
@@ -237,7 +221,6 @@ export default function Page() {
     <div className="min-h-screen bg-[#0052FF] text-white flex flex-col items-center p-4 font-sans overflow-x-hidden relative">
       <style jsx global>{`
         @keyframes floatSync { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
-        @keyframes bounceHorizontal { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-10px); } }
         @keyframes fadeUpCenter {
             0% { opacity: 0; transform: translate(-50%, 20px); }
             15% { opacity: 1; transform: translate(-50%, 0); }
@@ -245,7 +228,6 @@ export default function Page() {
             100% { opacity: 0; transform: translate(-50%, -20px); }
         }
         .animate-oracle-sync { animation: floatSync 3s ease-in-out infinite; }
-        .animate-bounce-horizontal { animation: bounceHorizontal 1s infinite; }
         .animate-fade-center { animation: fadeUpCenter 4s forwards; }
       `}</style>
 
@@ -256,7 +238,7 @@ export default function Page() {
       )}
 
       <header className="w-full max-w-md flex justify-between items-center mb-4 px-2">
-        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Score 5.5: Oracle V3</h1>
+        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Oracle Treasury V12</h1>
         <div className="scale-75 origin-right"><Wallet><ConnectWallet className="bg-white text-[#0052FF]" /></Wallet></div>
       </header>
 
@@ -264,7 +246,7 @@ export default function Page() {
         
         <div className="flex flex-col items-center text-center mb-6">
           <img src={user?.pfpUrl || "/oracle.png"} alt="PFP" className="w-16 h-16 rounded-full border-4 border-white/30 shadow-xl" />
-          <h2 className="text-lg font-black mt-2 tracking-tight">{user ? `@${user.username}` : "Base Builder"}</h2>
+          <h2 className="text-lg font-black mt-2 tracking-tight">{user ? `@${user.username}` : "Base Traveler"}</h2>
         </div>
 
         <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
@@ -283,7 +265,7 @@ export default function Page() {
           </Transaction>
         </div>
 
-        {/* КНОПКА КЛЕЙМА V3 */}
+        {/* СЕКЦИЯ КЛЕЙМА V12 */}
         <div className="mb-6">
           {oracleSignature ? (
             <Transaction 
@@ -294,19 +276,25 @@ export default function Page() {
                 functionName: 'claim', 
                 args: [oracleSignature as `0x${string}`] 
               }]}
+              onSuccess={() => {
+                triggerBonus("CLAIM SUCCESSFUL!");
+                fetchContractData();
+                setOracleSignature(null);
+                setSignStatus("Wait 12 Hours");
+              }}
             >
               <TransactionButton 
                 className="w-full bg-gradient-to-r from-green-400 to-blue-500 !text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(74,222,128,0.4)]" 
-                text="Claim 15,000 $USERBOX (V3)" 
+                text="Claim 15,000 $USERBOX" 
               />
             </Transaction>
           ) : (
             <button 
               onClick={getNewProphecy}
               disabled={isSigning}
-              className="w-full bg-gray-500/20 border-2 border-white/10 text-white/40 font-black py-4 rounded-2xl text-[10px] uppercase transition-all"
+              className="w-full bg-gray-500/20 border-2 border-white/10 text-white/60 font-black py-4 rounded-2xl text-[10px] uppercase transition-all"
             >
-              {isSigning ? "Oracle is signing..." : "Tap Oracle Head to Unlock Claim"}
+              {isSigning ? "Oracle is signing..." : signStatus}
             </button>
           )}
         </div>
@@ -314,7 +302,7 @@ export default function Page() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center">
             <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Wallet Rank</p>
-            <p className="text-2xl font-mono font-black text-white">{txCount ?? "..."}</p>
+            <p className="text-2xl font-mono font-black text-white">{txCount ?? "191"}</p>
           </div>
           <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center">
             <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p>
@@ -328,22 +316,22 @@ export default function Page() {
 
         <div className="bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
           <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between">
-            <span>Live Activity</span>
+            <span>Recent Visions</span>
             <span className="text-blue-400">by Alchemy</span>
           </p>
           <div className="space-y-2 max-h-[100px] overflow-y-auto text-[10px]">
-            {transactions.slice(0, 3).map((tx: any, i: number) => (
+            {transactions.length > 0 ? transactions.slice(0, 3).map((tx: any, i: number) => (
                 <div key={i} className="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5">
                   <p className="font-bold uppercase opacity-80">{tx.asset}</p>
                   <p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p>
                 </div>
-            ))}
+            )) : <p className="text-center opacity-30 italic">Searching the blockchain...</p>}
           </div>
         </div>
       </main>
 
       <footer className="mt-8 mb-10 text-center opacity-40">
-        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Powered by Base • V3 Secure</p>
+        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V12</p>
       </footer>
     </div>
   );
