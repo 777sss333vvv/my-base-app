@@ -257,7 +257,7 @@ export default function Page() {
           </Transaction>
         </div>
 
-        <div className="mb-6">
+<div className="mb-6">
           {oracleSignature ? (
             <Transaction 
               chainId={8453} 
@@ -265,7 +265,8 @@ export default function Page() {
                 to: TREASURY_ADDRESS as `0x${string}`, 
                 abi: TREASURY_ABI, 
                 functionName: 'claim', 
-                args: [oracleSignature as `0x${string}`] 
+                // Гарантируем корректный Hex-формат для предотвращения ошибки 0xc6
+                args: [(oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`) as `0x${string}`] 
               }]}
               onSuccess={() => {
                 triggerBonus("CLAIM SUCCESSFUL!");
