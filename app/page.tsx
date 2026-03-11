@@ -11,7 +11,8 @@ import { useAccount, useConnect, usePublicClient } from 'wagmi';
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-const TREASURY_ADDRESS = '0x6dec0EC13A1098C3BA8A813130efa9510293937C'; 
+// ОБНОВЛЕННЫЙ АДРЕС ТВОЕГО КОНТРАКТА V13
+const TREASURY_ADDRESS = '0x22E173B190fCca1d07808296483C96b868d6c2AB'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
@@ -41,7 +42,6 @@ export default function Page() {
   const [lastChoice, setLastChoice] = useState<'accept' | 'defy' | null>(null);
   const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
   
-  // Состояния для подписи и времени
   const [oracleSignature, setOracleSignature] = useState<string | null>(null);
   const [isSigning, setIsSigning] = useState(false);
   const [lastClaimTime, setLastClaimTime] = useState<bigint>(0n);
@@ -102,7 +102,6 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           userAddress: targetAddress
-          // lastClaimTime удален для исключения ошибки invalid opcode
         }),
       });
       
@@ -153,7 +152,8 @@ export default function Page() {
     const shareText = `${intro}\n\n` +
                       `🛡️ Base Score: ${txCount ?? 191}\n` +
                       `✨ Oracle Score: ${oracleScore}\n\n` +
-                      `🎁 Claiming $USERBOX V12 reward (Every 12h)!\n` + 
+                      // ОБНОВЛЕНО ДО V13
+                      `🎁 Claiming $USERBOX V13 reward (Every 12h)!\n` + 
                       `Tap the Oracle's head to get yours.\n\n` +
                       `Accept or Defy your fate! ⚡`;
 
@@ -230,7 +230,7 @@ export default function Page() {
       )}
 
       <header className="w-full max-w-md flex justify-between items-center mb-4 px-2">
-        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Oracle Treasury V12</h1>
+        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Oracle Treasury V13</h1>
         <div className="scale-75 origin-right"><Wallet><ConnectWallet className="bg-white text-[#0052FF]" /></Wallet></div>
       </header>
 
@@ -322,7 +322,7 @@ export default function Page() {
       </main>
 
       <footer className="mt-8 mb-10 text-center opacity-40">
-        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V12</p>
+        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V13</p>
       </footer>
     </div>
   );
