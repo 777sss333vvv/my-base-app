@@ -12,7 +12,7 @@ import { getRecentTransactions } from './alchemy';
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
 // ОБНОВЛЕННЫЙ АДРЕС ТВОЕГО КОНТРАКТА V13
-const TREASURY_ADDRESS = '0x177879834830da411880630505C8748373747A33'; 
+const TREASURY_ADDRESS = '0xcCa6F1f1e9bf50914623aC701427aA175c65A4F4'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
