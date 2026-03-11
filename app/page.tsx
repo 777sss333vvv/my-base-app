@@ -11,7 +11,7 @@ import { useAccount, useConnect, usePublicClient } from 'wagmi';
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-const TREASURY_ADDRESS = '0xfD502872F300048a222938625bba3f1d2456500C'; 
+const TREASURY_ADDRESS = '0x6dec0EC13A1098C3BA8A813130efa9510293937C'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
@@ -40,7 +40,6 @@ export default function Page() {
   const [isOracleLoading, setIsOracleLoading] = useState(false);
   const [lastChoice, setLastChoice] = useState<'accept' | 'defy' | null>(null);
   const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
-  const [isBonusClaimed, setIsBonusClaimed] = useState(false);
   
   // Состояния для подписи и времени
   const [oracleSignature, setOracleSignature] = useState<string | null>(null);
@@ -55,8 +54,6 @@ export default function Page() {
   useEffect(() => {
     const savedScore = localStorage.getItem('oracle_score_v5');
     if (savedScore) setOracleScore(Number(savedScore));
-    const claimed = localStorage.getItem('oracle_loyalty_v1');
-    if (claimed === 'true') setIsBonusClaimed(true);
   }, []);
 
   useEffect(() => {
@@ -68,7 +65,6 @@ export default function Page() {
     setTimeout(() => setShowBonus({ show: false, text: "" }), 4000);
   }, []);
 
-  // 1. ПОЛУЧЕНИЕ ВРЕМЕНИ ИЗ КОНТРАКТА
   const fetchContractData = useCallback(async () => {
     const targetAddress = connectedAddress || user?.custodyAddress;
     if (targetAddress && publicClient) {
@@ -90,7 +86,6 @@ export default function Page() {
     fetchContractData();
   }, [fetchContractData]);
 
-  // 2. ПОЛУЧЕНИЕ ПОДПИСИ (Скрытая диагностика)
   const getSignatureFromOracle = async () => {
     const targetAddress = connectedAddress || user?.custodyAddress;
     if (!targetAddress) {
@@ -106,8 +101,8 @@ export default function Page() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          userAddress: targetAddress,
-          lastClaimTime: lastClaimTime.toString() 
+          userAddress: targetAddress
+          // lastClaimTime удален для исключения ошибки invalid opcode
         }),
       });
       
@@ -117,14 +112,11 @@ export default function Page() {
         setOracleSignature(data.signature);
         triggerBonus("PROPHECY SIGNED");
         setSignStatus("Prophecy Ready");
-        console.log("Oracle: Signature validated.");
       } else {
         setSignStatus("Oracle Busy, try again");
-        console.error("Oracle Error:", data.error || data.details);
       }
     } catch (err) {
       setSignStatus("Connection Lost");
-      console.error("Network Error:", err);
     } finally {
       setIsSigning(false);
     }
@@ -144,7 +136,7 @@ export default function Page() {
   const getNewProphecy = () => {
     if (isOracleLoading) return;
     setIsOracleLoading(true);
-    setOracleSignature(null); // Сброс старой подписи
+    setOracleSignature(null); 
     setTimeout(() => {
       const randomMsg = prophecies[Math.floor(Math.random() * prophecies.length)];
       setOracleMessage(randomMsg);
@@ -159,7 +151,7 @@ export default function Page() {
                  : `🔮 My Prophecy: "${oracleMessage}"`;
 
     const shareText = `${intro}\n\n` +
-                      `🛡️ Wallet Rank: ${txCount ?? 191}\n` +
+                      `🛡️ Base Score: ${txCount ?? 191}\n` +
                       `✨ Oracle Score: ${oracleScore}\n\n` +
                       `🎁 Claiming $USERBOX V12 reward (Every 12h)!\n` + 
                       `Tap the Oracle's head to get yours.\n\n` +
@@ -265,7 +257,6 @@ export default function Page() {
           </Transaction>
         </div>
 
-        {/* СЕКЦИЯ КЛЕЙМА V12 */}
         <div className="mb-6">
           {oracleSignature ? (
             <Transaction 
@@ -284,7 +275,7 @@ export default function Page() {
               }}
             >
               <TransactionButton 
-                className="w-full bg-gradient-to-r from-green-400 to-blue-500 !text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(74,222,128,0.4)]" 
+                className="w-full bg-[#FF00FF] !text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] border-none" 
                 text="Claim 15,000 $USERBOX" 
               />
             </Transaction>
@@ -301,7 +292,7 @@ export default function Page() {
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center">
-            <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Wallet Rank</p>
+            <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Base Score</p>
             <p className="text-2xl font-mono font-black text-white">{txCount ?? "191"}</p>
           </div>
           <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center">

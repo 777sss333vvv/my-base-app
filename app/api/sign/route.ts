@@ -3,34 +3,21 @@ import { ethers } from 'ethers';
 
 export async function POST(req: Request) {
   try {
-    const { userAddress, lastClaimTime } = await req.json();
+    const { userAddress } = await req.json();
     
     const pKey = process.env.ORACLE_PRIVATE_KEY;
-    if (!pKey) {
-      return NextResponse.json({ error: 'Config error: Key missing' }, { status: 500 });
-    }
+    if (!pKey) return NextResponse.json({ error: 'Config error' }, { status: 500 });
 
-    // Создаем кошелек для подписи (провайдер не нужен)
-    const WalletClass = ethers.Wallet as unknown as {
-      new (key: string): ethers.Wallet;
-    };
-    const wallet = new WalletClass(pKey);
+    const wallet = new ethers.Wallet(pKey);
 
-    // ВАЖНО: Превращаем время в BigNumber для точного соответствия uint256 в Solidity
-    const timeValue = ethers.BigNumber.from(lastClaimTime);
+    // Хэшируем только адрес по стандарту Solidity solidityKeccak256
+    const messageHash = ethers.utils.solidityKeccak256(["address"], [userAddress]);
 
-    // Генерируем хеш точно по логике контракта: keccak256(abi.encodePacked(address, uint256))
-    const messageHash = ethers.utils.solidityKeccak256(
-      ["address", "uint256"],
-      [userAddress, timeValue]
-    );
-
-    // Подписываем бинарное представление хеша
+    // Подписываем (wallet.signMessage автоматически добавляет префикс Ethereum Signed Message)
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ error: 'Sign failed', details: errorMessage }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Sign failed', details: err.message }, { status: 500 });
   }
 }
