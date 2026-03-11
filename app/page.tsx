@@ -11,10 +11,17 @@ import { useAccount, useConnect, usePublicClient } from 'wagmi';
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-const TREASURY_ADDRESS = '0x2dAbB90b88AAA212cfa01913d2C9a7D7fC592e49'; // Твой контракт V3
+const TREASURY_ADDRESS = '0x2dAbB90b88AAA212cfa01913d2C9a7D7fC592e49'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "lastClaimTime",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
   {
     "inputs": [{ "internalType": "bytes", "name": "signature", "type": "bytes" }],
     "name": "claim",
@@ -36,9 +43,10 @@ export default function Page() {
   const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
   const [isBonusClaimed, setIsBonusClaimed] = useState(false);
   
-  // Состояния для подписи Оракула
+  // Состояния для подписи и времени
   const [oracleSignature, setOracleSignature] = useState<string | null>(null);
   const [isSigning, setIsSigning] = useState(false);
+  const [lastClaimTime, setLastClaimTime] = useState<bigint>(0n);
   
   const { isConnected, address: connectedAddress } = useAccount();
   const { connect, connectors } = useConnect();
@@ -47,7 +55,6 @@ export default function Page() {
   useEffect(() => {
     const savedScore = localStorage.getItem('oracle_score_v5');
     if (savedScore) setOracleScore(Number(savedScore));
-    
     const claimed = localStorage.getItem('oracle_loyalty_v1');
     if (claimed === 'true') setIsBonusClaimed(true);
   }, []);
@@ -61,8 +68,30 @@ export default function Page() {
     setTimeout(() => setShowBonus({ show: false, text: "" }), 4000);
   }, []);
 
-  // Функция получения подписи от нашего нового API на Vercel
-const getSignatureFromOracle = async () => {
+  // 1. ПОЛУЧЕНИЕ ВРЕМЕНИ ИЗ КОНТРАКТА
+  const fetchContractData = useCallback(async () => {
+    const targetAddress = connectedAddress || user?.custodyAddress;
+    if (targetAddress && publicClient) {
+      try {
+        const time = await publicClient.readContract({
+          address: TREASURY_ADDRESS as `0x${string}`,
+          abi: TREASURY_ABI,
+          functionName: 'lastClaimTime',
+          args: [targetAddress as `0x${string}`],
+        });
+        setLastClaimTime(time as bigint);
+      } catch (e) {
+        console.error("Error reading lastClaimTime", e);
+      }
+    }
+  }, [connectedAddress, user, publicClient]);
+
+  useEffect(() => {
+    fetchContractData();
+  }, [fetchContractData]);
+
+  // 2. ПОЛУЧЕНИЕ ПОДПИСИ
+  const getSignatureFromOracle = async () => {
     const targetAddress = connectedAddress || user?.custodyAddress;
     
     if (!targetAddress) {
@@ -77,7 +106,10 @@ const getSignatureFromOracle = async () => {
       const response = await fetch('/api/sign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userAddress: targetAddress }),
+        body: JSON.stringify({ 
+          userAddress: targetAddress,
+          lastClaimTime: lastClaimTime.toString() // Теперь передается актуальное время
+        }),
       });
       
       const data = await response.json();
@@ -87,7 +119,7 @@ const getSignatureFromOracle = async () => {
         triggerBonus("ORACLE SIGNED V3");
         alert("Stage B: Signature Received");
       } else {
-        alert("Stage C: API Error - " + (data.error || "Unknown"));
+        alert("Stage C: API Error - " + (data.error || data.details || "Unknown"));
       }
     } catch (err) {
       alert("Stage D: Network Error");
@@ -120,18 +152,15 @@ const getSignatureFromOracle = async () => {
       const randomMsg = prophecies[Math.floor(Math.random() * prophecies.length)];
       setOracleMessage(randomMsg);
       setIsOracleLoading(false);
-      // При получении пророчества теперь запрашиваем подпись для клейма
       getSignatureFromOracle();
     }, 600);
   };
 
-const handleShare = useCallback(() => {
-    // Выбираем заголовок в зависимости от того, что нажал юзер: Accept или Defy
+  const handleShare = useCallback(() => {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                  : lastChoice === 'defy' ? `⚔️ I defy my fate! The prophecy was: "${oracleMessage}"`
                  : `🔮 My Oracle Prophecy: "${oracleMessage}"`;
 
-    // Собираем полный текст (возвращаем Base Score и нормальную структуру)
     const shareText = `${intro}\n\n` +
                       `🛡️ Base Score: ${txCount ?? 0}\n` +
                       `✨ Oracle Score: ${oracleScore}\n\n` +
@@ -141,16 +170,16 @@ const handleShare = useCallback(() => {
 
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
-    
     sdk.actions.openUrl(shareUrl);
-  }, [oracleMessage, txCount, oracleScore, lastChoice]); // Добавили зависимости, чтобы данные не устаревали
+  }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
   const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', txHash: string) => {
     if (!txHash) return;
     setOracleScore(prev => prev + 100);
     setLastChoice(choice);
     triggerBonus("+100 ORACLE SCORE");
-  }, [triggerBonus]);
+    fetchContractData(); // Обновляем данные контракта после транзакции
+  }, [triggerBonus, fetchContractData]);
 
   const handleAddApp = async () => {
     if (isBonusClaimed) return;
