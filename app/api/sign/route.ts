@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
-  } catch (err: unknown) {
-    return NextResponse.json({ error: 'Sign failed' }, { status: 500 });
-  }
+} catch (_err: unknown) {
+  return NextResponse.json({ error: 'Sign failed' }, { status: 500 });
+}
 }
