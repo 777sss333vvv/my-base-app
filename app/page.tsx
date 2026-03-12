@@ -7,11 +7,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
 import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
-import { useAccount, useConnect, usePublicClient } from 'wagmi';
+import { useAccount, useConnect, usePublicClient, useWriteContract } from 'wagmi';
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-// ОБНОВЛЕННЫЙ АДРЕС ТВОЕГО КОНТРАКТА V14_3
 const TREASURY_ADDRESS = '0xa2d290440AAA8FddFF24b7Aef5fc4dc559F6ecDC'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
@@ -33,6 +32,9 @@ const TREASURY_ABI = [
 ] as const;
 
 export default function Page() {
+  // Хук для прямой отправки транзакции (минуя упаковку OnchainKit)
+  const { data: hash, writeContract } = useWriteContract();
+
   const [user, setUser] = useState<any>(null);
   const [txCount, setTxCount] = useState<number | null>(null);
   const [oracleScore, setOracleScore] = useState<number>(1250); 
@@ -51,6 +53,7 @@ export default function Page() {
   const { connect, connectors } = useConnect();
   const publicClient = usePublicClient();
 
+  // 1. Сначала стейты и базовые эффекты
   useEffect(() => {
     const savedScore = localStorage.getItem('oracle_score_v5');
     if (savedScore) setOracleScore(Number(savedScore));
@@ -65,6 +68,7 @@ export default function Page() {
     setTimeout(() => setShowBonus({ show: false, text: "" }), 4000);
   }, []);
 
+  // 2. Объявляем функцию получения данных из контракта
   const fetchContractData = useCallback(async () => {
     const targetAddress = connectedAddress || user?.custodyAddress;
     if (targetAddress && publicClient) {
@@ -77,10 +81,20 @@ export default function Page() {
         });
         setLastClaimTime(time as bigint);
       } catch (e) {
-        console.error("Oracle logic: No previous history found", e);
+        console.error("Oracle logic: No history", e);
       }
     }
   }, [connectedAddress, user, publicClient]);
+
+  // 3. Эффект обработки УСПЕШНОГО клейма (теперь ошибки не будет)
+  useEffect(() => {
+    if (hash) {
+      triggerBonus("CLAIM SUCCESSFUL!");
+      fetchContractData();
+      setOracleSignature(null);
+      setSignStatus("Wait 12 Hours");
+    }
+  }, [hash, fetchContractData, triggerBonus]);
 
   useEffect(() => {
     fetchContractData();
@@ -92,27 +106,21 @@ export default function Page() {
       setSignStatus("Connect Wallet First");
       return;
     }
-
     setSignStatus("Consulting Stars...");
     setIsSigning(true);
-
     try {
       const response = await fetch('/api/sign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userAddress: targetAddress
-        }),
+        body: JSON.stringify({ userAddress: targetAddress }),
       });
-      
       const data = await response.json();
-      
       if (data.signature) {
         setOracleSignature(data.signature);
         triggerBonus("PROPHECY SIGNED");
         setSignStatus("Prophecy Ready");
       } else {
-        setSignStatus("Oracle Busy, try again");
+        setSignStatus("Oracle Busy");
       }
     } catch (err) {
       setSignStatus("Connection Lost");
@@ -123,13 +131,13 @@ export default function Page() {
 
   const prophecies = useMemo(() => [
     "The Oracle has recalibrated. The $USERBOX era begins now. 🔮",
-    "The signals have formed a constellation. Your path is now illuminated. ✨",
-    "Base is the soil, $USERBOX is the seed. Watch it grow. 🌱",
+    "The signals have formed a constellation. ✨",
+    "Base is the soil, $USERBOX is the seed. 🌱",
     "The Treasury is breathing. Can you hear the chain? 💎",
-    "The prophecy is carved in code. It cannot be erased. 🛠️",
-    "Your Oracle Score is your shield. Build it. 📈",
-    "12 hours of patience leads to eternity of wealth. ⏳",
-    "The stars over Base align. A new tide is coming. 🌊"
+    "The prophecy is carved in code. 🛠️",
+    "Your Oracle Score is your shield. 📈",
+    "12 hours of patience leads to wealth. ⏳",
+    "The stars over Base align. 🌊"
   ], []);
 
   const getNewProphecy = () => {
@@ -146,17 +154,9 @@ export default function Page() {
 
   const handleShare = useCallback(() => {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
-                 : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
-                 : `🔮 My Prophecy: "${oracleMessage}"`;
-
-    const shareText = `${intro}\n\n` +
-                      `🛡️ Base Score: ${txCount ?? 191}\n` +
-                      `✨ Oracle Score: ${oracleScore}\n\n` +
-                      // ОБНОВЛЕНО ДО V13
-                      `🎁 Claiming $USERBOX V13 reward (Every 12h)!\n` + 
-                      `Tap the Oracle's head to get yours.\n\n` +
-                      `Accept or Defy your fate! ⚡`;
-
+                  : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
+                  : `🔮 My Prophecy: "${oracleMessage}"`;
+    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claiming $USERBOX reward!\n\nAccept or Defy your fate! ⚡`;
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
     sdk.actions.openUrl(shareUrl);
@@ -257,29 +257,22 @@ export default function Page() {
           </Transaction>
         </div>
 
-<div className="mb-6">
+        <div className="mb-6">
           {oracleSignature ? (
-            <Transaction 
-              chainId={8453} 
-              calls={[{ 
-                to: TREASURY_ADDRESS as `0x${string}`, 
-                abi: TREASURY_ABI, 
-                functionName: 'claim', 
-                // Гарантируем корректный Hex-формат для предотвращения ошибки 0xc6
-                args: [(oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`) as `0x${string}`] 
-              }]}
-              onSuccess={() => {
-                triggerBonus("CLAIM SUCCESSFUL!");
-                fetchContractData();
-                setOracleSignature(null);
-                setSignStatus("Wait 12 Hours");
+            <button
+              onClick={() => {
+                const cleanSig = oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`;
+                writeContract({
+                  address: TREASURY_ADDRESS as `0x${string}`,
+                  abi: TREASURY_ABI,
+                  functionName: 'claim',
+                  args: [cleanSig.trim() as `0x${string}`],
+                });
               }}
+              className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] border-none hover:scale-105 active:scale-95 transition-all"
             >
-              <TransactionButton 
-                className="w-full bg-[#FF00FF] !text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] border-none" 
-                text="Claim 15,000 $USERBOX" 
-              />
-            </Transaction>
+              Claim 15,000 $USERBOX
+            </button>
           ) : (
             <button 
               onClick={getNewProphecy}
