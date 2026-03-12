@@ -1,31 +1,68 @@
 import { NextResponse } from 'next/server';
 import { ethers } from 'ethers';
+import { createPublicClient, http } from 'viem';
+import { base } from 'viem/chains';
+
+// Клиент для проверки времени прямо в блокчейне Base
+const publicClient = createPublicClient({ 
+  chain: base,
+  transport: http()
+});
+
+const TREASURY_ADDRESS = '0xa2d290440AAA8FddFF24b7Aef5fc4dc559F6ecDC';
+const TREASURY_ABI = [
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "lastClaimTime",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
+
+// Лимит по IP (в памяти сервера)
+const ipCache = new Map<string, number>();
 
 export async function POST(req: Request) {
   try {
     const { userAddress } = await req.json();
-    
-    const pKey = process.env.ORACLE_PRIVATE_KEY;
-    if (!pKey) {
-      return NextResponse.json({ error: 'Config error: Key missing' }, { status: 500 });
+    const ip = req.headers.get('x-forwarded-for') || 'anonymous';
+    const now = Math.floor(Date.now() / 1000);
+
+    // 1. Защита от спама (Rate Limit по IP - 30 секунд)
+    const lastIpRequest = ipCache.get(ip) || 0;
+    if (now - lastIpRequest < 30) {
+      return NextResponse.json({ error: 'Slow down! Wait 30s' }, { status: 429 });
+    }
+    ipCache.set(ip, now);
+
+    // 2. Проверка 12 часов (защита приватного ключа)
+    const lastClaim = await publicClient.readContract({
+      address: TREASURY_ADDRESS,
+      abi: TREASURY_ABI,
+      functionName: 'lastClaimTime',
+      args: [userAddress as `0x${string}`],
+    }) as bigint;
+
+    if (now - Number(lastClaim) < 43200) { // 12 часов в секундах
+      return NextResponse.json({ error: 'Wait 12h' }, { status: 403 });
     }
 
+    // 3. Генерация подписи
+    const pKey = process.env.ORACLE_PRIVATE_KEY;
+    if (!pKey) return NextResponse.json({ error: 'Config error' }, { status: 500 });
+
     const wallet = new ethers.Wallet(pKey);
-
-    // 1. Приводим адрес к нижнему регистру и проверяем формат 0x...
-    // Это гарантирует, что Solidity и JS видят одни и те же байты.
     const cleanAddress = userAddress.toLowerCase();
-
-    // 2. Хэшируем точно так же, как abi.encodePacked в Solidity
-    // Используем keccak256 от упакованных байтов адреса
+    
+    // Хэшируем точно как в контракте: keccak256(abi.encodePacked(msg.sender))
     const messageHash = ethers.utils.keccak256(cleanAddress);
-
-    // 3. Подписываем массив байтов (EIP-191)
+    
+    // Подписываем (добавляет префикс Ethereum Signed Message)
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ error: 'Sign failed', details: errorMessage }, { status: 500 });
+    return NextResponse.json({ error: 'Sign failed' }, { status: 500 });
   }
 }

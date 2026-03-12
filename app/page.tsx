@@ -32,7 +32,6 @@ const TREASURY_ABI = [
 ] as const;
 
 export default function Page() {
-  // Хук для прямой отправки транзакции (минуя упаковку OnchainKit)
   const { data: hash, writeContract } = useWriteContract();
 
   const [user, setUser] = useState<any>(null);
@@ -53,7 +52,6 @@ export default function Page() {
   const { connect, connectors } = useConnect();
   const publicClient = usePublicClient();
 
-  // 1. Сначала стейты и базовые эффекты
   useEffect(() => {
     const savedScore = localStorage.getItem('oracle_score_v5');
     if (savedScore) setOracleScore(Number(savedScore));
@@ -68,7 +66,6 @@ export default function Page() {
     setTimeout(() => setShowBonus({ show: false, text: "" }), 4000);
   }, []);
 
-  // 2. Объявляем функцию получения данных из контракта
   const fetchContractData = useCallback(async () => {
     const targetAddress = connectedAddress || user?.custodyAddress;
     if (targetAddress && publicClient) {
@@ -86,7 +83,6 @@ export default function Page() {
     }
   }, [connectedAddress, user, publicClient]);
 
-  // 3. Эффект обработки УСПЕШНОГО клейма (теперь ошибки не будет)
   useEffect(() => {
     if (hash) {
       triggerBonus("CLAIM SUCCESSFUL!");
@@ -120,7 +116,7 @@ export default function Page() {
         triggerBonus("PROPHECY SIGNED");
         setSignStatus("Prophecy Ready");
       } else {
-        setSignStatus("Oracle Busy");
+        setSignStatus(data.error || "Oracle Busy");
       }
     } catch (err) {
       setSignStatus("Connection Lost");
@@ -133,7 +129,7 @@ export default function Page() {
     "The Oracle has recalibrated. The $USERBOX era begins now. 🔮",
     "The signals have formed a constellation. ✨",
     "Base is the soil, $USERBOX is the seed. 🌱",
-    "The Treasury is breathing. Can you hear the chain? 💎",
+    "The Treasury is breathing. 💎",
     "The prophecy is carved in code. 🛠️",
     "Your Oracle Score is your shield. 📈",
     "12 hours of patience leads to wealth. ⏳",
@@ -258,30 +254,48 @@ export default function Page() {
         </div>
 
         <div className="mb-6">
-          {oracleSignature ? (
-            <button
-              onClick={() => {
-                const cleanSig = oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`;
-                writeContract({
-                  address: TREASURY_ADDRESS as `0x${string}`,
-                  abi: TREASURY_ABI,
-                  functionName: 'claim',
-                  args: [cleanSig.trim() as `0x${string}`],
-                });
-              }}
-              className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] border-none hover:scale-105 active:scale-95 transition-all"
-            >
-              Claim 15,000 $USERBOX
-            </button>
-          ) : (
-            <button 
-              onClick={getNewProphecy}
-              disabled={isSigning}
-              className="w-full bg-gray-500/20 border-2 border-white/10 text-white/60 font-black py-4 rounded-2xl text-[10px] uppercase transition-all"
-            >
-              {isSigning ? "Oracle is signing..." : signStatus}
-            </button>
-          )}
+          {(() => {
+            const now = Math.floor(Date.now() / 1000);
+            const waitTime = Number(lastClaimTime) + 43200; 
+            const isWaitMode = now < waitTime && lastClaimTime !== 0n;
+
+            if (isWaitMode) {
+              return (
+                <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">
+                  Wait 12 Hours
+                </button>
+              );
+            }
+
+            if (oracleSignature) {
+              return (
+                <button
+                  onClick={() => {
+                    const cleanSig = oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`;
+                    writeContract({
+                      address: TREASURY_ADDRESS as `0x${string}`,
+                      abi: TREASURY_ABI,
+                      functionName: 'claim',
+                      args: [cleanSig.trim() as `0x${string}`],
+                    });
+                  }}
+                  className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] border-none hover:scale-105 active:scale-95 transition-all"
+                >
+                  Claim 15,000 $USERBOX
+                </button>
+              );
+            }
+
+            return (
+              <button 
+                onClick={getNewProphecy}
+                disabled={isSigning}
+                className="w-full bg-gray-500/20 border-2 border-white/10 text-white/60 font-black py-4 rounded-2xl text-[10px] uppercase transition-all"
+              >
+                {isSigning ? "Oracle is signing..." : signStatus}
+              </button>
+            );
+          })()}
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -316,7 +330,7 @@ export default function Page() {
       </main>
 
       <footer className="mt-8 mb-10 text-center opacity-40">
-        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V13</p>
+        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V14</p>
       </footer>
     </div>
   );
