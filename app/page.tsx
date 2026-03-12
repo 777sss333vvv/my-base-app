@@ -11,8 +11,8 @@ import { useAccount, useConnect, usePublicClient } from 'wagmi';
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-// ОБНОВЛЕННЫЙ АДРЕС ТВОЕГО КОНТРАКТА V13
-const TREASURY_ADDRESS = '0xD50f76e17037DBc821c9cFFdd3a6E47baB002f21'; 
+// ОБНОВЛЕННЫЙ АДРЕС ТВОЕГО КОНТРАКТА V14_3
+const TREASURY_ADDRESS = '0xa2d290440AAA8FddFF24b7Aef5fc4dc559F6ecDC'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
