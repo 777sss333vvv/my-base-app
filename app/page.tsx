@@ -15,25 +15,12 @@ const TREASURY_ADDRESS = '0xa2d290440AAA8FddFF24b7Aef5fc4dc559F6ecDC';
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
-  {
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "lastClaimTime",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "bytes", "name": "signature", "type": "bytes" }],
-    "name": "claim",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
+  { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "lastClaimTime", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [{ "internalType": "bytes", "name": "signature", "type": "bytes" }], "name": "claim", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
 ] as const;
 
 export default function Page() {
   const { data: hash, writeContract } = useWriteContract();
-
   const [user, setUser] = useState<any>(null);
   const [txCount, setTxCount] = useState<number | null>(null);
   const [oracleScore, setOracleScore] = useState<number>(1250); 
@@ -42,7 +29,6 @@ export default function Page() {
   const [isOracleLoading, setIsOracleLoading] = useState(false);
   const [lastChoice, setLastChoice] = useState<'accept' | 'defy' | null>(null);
   const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
-  
   const [oracleSignature, setOracleSignature] = useState<string | null>(null);
   const [isSigning, setIsSigning] = useState(false);
   const [lastClaimTime, setLastClaimTime] = useState<bigint>(0n);
@@ -77,11 +63,19 @@ export default function Page() {
           args: [targetAddress as `0x${string}`],
         });
         setLastClaimTime(time as bigint);
-      } catch (e) {
-        console.error("Oracle logic: No history", e);
-      }
+      } catch (e) { console.error(e); }
     }
   }, [connectedAddress, user, publicClient]);
+
+  const handleShare = useCallback(() => {
+    const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
+                  : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
+                  : `🔮 My Prophecy: "${oracleMessage}"`;
+    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $USERBOX reward! Next attempt in 12 hours. ⏳\n\nAccept or Defy your fate every 12h! ⚡`;
+    const targetUrl = "https://www.prosperitypass.xyz";
+    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
+    sdk.actions.openUrl(shareUrl);
+  }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
   useEffect(() => {
     if (hash) {
@@ -92,16 +86,30 @@ export default function Page() {
     }
   }, [hash, fetchContractData, triggerBonus]);
 
-  useEffect(() => {
+  const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
+    // ЗАХВАТ ХЭША: Проверяем все возможные поля
+    const txHash = response?.transactionHash || response?.hash || response?.receipt?.transactionHash;
+    console.log("DEBUG: TX Response received:", response);
+
+    if (!txHash) return;
+
+    const isProcessed = sessionStorage.getItem(`tx_${txHash}`);
+    if (isProcessed) return;
+    sessionStorage.setItem(`tx_${txHash}`, 'true');
+
+    setOracleScore(prev => {
+      const newScore = prev + 100;
+      localStorage.setItem('oracle_score_v5', newScore.toString());
+      return newScore;
+    });
+    setLastChoice(choice);
+    triggerBonus("+100 ORACLE SCORE");
     fetchContractData();
-  }, [fetchContractData]);
+  }, [triggerBonus, fetchContractData]);
 
   const getSignatureFromOracle = async () => {
     const targetAddress = connectedAddress || user?.custodyAddress;
-    if (!targetAddress) {
-      setSignStatus("Connect Wallet First");
-      return;
-    }
+    if (!targetAddress) { setSignStatus("Connect Wallet First"); return; }
     setSignStatus("Consulting Stars...");
     setIsSigning(true);
     try {
@@ -115,95 +123,38 @@ export default function Page() {
         setOracleSignature(data.signature);
         triggerBonus("PROPHECY SIGNED");
         setSignStatus("Prophecy Ready");
-      } else {
-        setSignStatus(data.error || "Oracle Busy");
-      }
-    } catch (err) {
-      setSignStatus("Connection Lost");
-    } finally {
-      setIsSigning(false);
-    }
+      } else { setSignStatus(data.error || "Oracle Busy"); }
+    } catch (err) { setSignStatus("Connection Lost"); } finally { setIsSigning(false); }
   };
-
-  const prophecies = useMemo(() => [
-    "The Oracle has recalibrated. The $USERBOX era begins now. 🔮",
-    "The signals have formed a constellation. ✨",
-    "Base is the soil, $USERBOX is the seed. 🌱",
-    "The Treasury is breathing. 💎",
-    "The prophecy is carved in code. 🛠️",
-    "Your Oracle Score is your shield. 📈",
-    "12 hours of patience leads to wealth. ⏳",
-    "The stars over Base align. 🌊"
-  ], []);
 
   const getNewProphecy = () => {
     if (isOracleLoading) return;
     setIsOracleLoading(true);
     setOracleSignature(null); 
     setTimeout(() => {
-      const randomMsg = prophecies[Math.floor(Math.random() * prophecies.length)];
+      const randomMsg = ["The Oracle has recalibrated. 🔮", "The signals have formed a constellation. ✨", "Base is the soil, $USERBOX is the seed. 🌱", "The Treasury is breathing. 💎", "The prophecy is carved in code. 🛠️", "Your Oracle Score is your shield. 📈", "12 hours of patience leads to wealth. ⏳", "The stars over Base align. 🌊"][Math.floor(Math.random() * 8)];
       setOracleMessage(randomMsg);
       setIsOracleLoading(false);
       getSignatureFromOracle();
     }, 600);
   };
 
-  const handleShare = useCallback(() => {
-    const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
-                  : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
-                  : `🔮 My Prophecy: "${oracleMessage}"`;
-    
-    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $USERBOX reward! Next attempt in 12 hours. ⏳\n\nAccept or Defy your fate every 12h! ⚡`;
-    
-    const targetUrl = "https://www.prosperitypass.xyz";
-    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
-    sdk.actions.openUrl(shareUrl);
-  }, [oracleMessage, txCount, oracleScore, lastChoice]);
-
-  const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', txHash: string) => {
-    if (!txHash) return;
-    
-    // Защита от накрутки: проверяем хэш в sessionStorage
-    const isProcessed = sessionStorage.getItem(`tx_${txHash}`);
-    if (isProcessed) return;
-
-    sessionStorage.setItem(`tx_${txHash}`, 'true');
-
-    setOracleScore(prev => {
-      const newScore = prev + 100;
-      localStorage.setItem('oracle_score_v5', newScore.toString());
-      return newScore;
-    });
-    
-    setLastChoice(choice);
-    triggerBonus("+100 ORACLE SCORE");
-    fetchContractData();
-  }, [triggerBonus, fetchContractData]);
-
-  // Загрузка SDK и бонус +250 за Add App
   useEffect(() => {
     const load = async () => {
       sdk.actions.ready();
       const context = await sdk.context;
       if (context?.user) {
         setUser(context.user);
-
-        // Бонус за добавление приложения с уведомлением
         const bonusGiven = localStorage.getItem('oracle_bonus_added_v1');
         if (context.client.added && !bonusGiven) {
           setOracleScore(prev => {
-            const newScore = prev + 250;
-            localStorage.setItem('oracle_score_v5', newScore.toString());
-            return newScore;
+            const ns = prev + 250;
+            localStorage.setItem('oracle_score_v5', ns.toString());
+            return ns;
           });
           localStorage.setItem('oracle_bonus_added_v1', 'true');
-          
-          // Визуальное уведомление через 1.5 секунды после старта
-          setTimeout(() => {
-            triggerBonus("+250 ADD APP BONUS");
-          }, 1500);
+          setTimeout(() => triggerBonus("+250 ADD APP BONUS"), 1500);
         }
-
         const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
         if (farcasterConnector && !isConnected) connect({ connector: farcasterConnector });
       }
@@ -222,39 +173,22 @@ export default function Page() {
       }
     };
     fetchScore();
-  }, [user, connectedAddress, publicClient]);
-
-  useEffect(() => {
-    async function fetchAlchemyData() {
-      const targetAddress = connectedAddress || user?.custodyAddress;
-      if (targetAddress) {
-        try {
-          const data = await getRecentTransactions(targetAddress);
-          setTransactions(data || []);
-        } catch (err) { console.error(err); } 
-      }
-    }
-    fetchAlchemyData();
-  }, [connectedAddress, user]);
+    fetchContractData();
+  }, [user, connectedAddress, publicClient, fetchContractData]);
 
   return (
     <div className="min-h-screen bg-[#0052FF] text-white flex flex-col items-center p-4 font-sans overflow-x-hidden relative">
       <style jsx global>{`
         @keyframes floatSync { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
-        @keyframes fadeUpCenter {
-            0% { opacity: 0; transform: translate(-50%, 20px); }
-            15% { opacity: 1; transform: translate(-50%, 0); }
-            85% { opacity: 1; transform: translate(-50%, 0); }
-            100% { opacity: 0; transform: translate(-50%, -20px); }
-        }
+        @keyframes fadeUpCenter { 0% { opacity: 0; transform: translate(-50%, 20px); } 15% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -20px); } }
+        @keyframes bounce-horizontal { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-5px); } }
         .animate-oracle-sync { animation: floatSync 3s ease-in-out infinite; }
         .animate-fade-center { animation: fadeUpCenter 4s forwards; }
+        .animate-bounce-horizontal { animation: bounce-horizontal 1.5s ease-in-out infinite; }
       `}</style>
 
       {showBonus.show && (
-          <div style={{ zIndex: 10000 }} className="fixed top-24 left-1/2 bg-white text-[#FF00FF] px-8 py-3 rounded-full font-black text-lg shadow-[0_10px_40px_rgba(0,0,0,0.3)] animate-fade-center border-4 border-[#FF00FF] whitespace-nowrap pointer-events-none">
-              {showBonus.text} 🔮
-          </div>
+          <div style={{ zIndex: 10000 }} className="fixed top-24 left-1/2 bg-white text-[#FF00FF] px-8 py-3 rounded-full font-black text-lg shadow-[0_10px_40px_rgba(0,0,0,0.3)] animate-fade-center border-4 border-[#FF00FF] whitespace-nowrap pointer-events-none">{showBonus.text} 🔮</div>
       )}
 
       <header className="w-full max-w-md flex justify-between items-center mb-4 px-2">
@@ -264,6 +198,15 @@ export default function Page() {
 
       <main className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-[2.5rem] p-6 border border-white/20 shadow-2xl relative flex flex-col">
         
+        {/* ВЕРНУЛИ ТВОЙ БЛОК ИНСТРУКЦИИ СО СТРЕЛКОЙ */}
+        <div className="flex flex-col items-center mb-6">
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">🔮 How to play:</p>
+          <div className="flex items-center gap-2 bg-black/20 px-4 py-1.5 rounded-full border border-white/10">
+            <p className="text-[11px] font-bold text-white uppercase italic">Tap Oracle to start</p>
+            <span className="text-lg animate-bounce-horizontal">👈</span>
+          </div>
+        </div>
+
         <div className="flex flex-col items-center text-center mb-6">
           <img src={user?.pfpUrl || "/oracle.png"} alt="PFP" className="w-16 h-16 rounded-full border-4 border-white/30 shadow-xl" />
           <h2 className="text-lg font-black mt-2 tracking-tight">{user ? `@${user.username}` : "Base Traveler"}</h2>
@@ -277,10 +220,10 @@ export default function Page() {
         </div>
 
         <div className="flex gap-3 mb-4">
-          <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onSuccess={(res: any) => handleScoreUpdate('accept', res.transactionHash)}>
+          <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onSuccess={(res: any) => handleScoreUpdate('accept', res)}>
             <TransactionButton className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF]" text="FAITH (+100)" />
           </Transaction>
-          <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onSuccess={(res: any) => handleScoreUpdate('defy', res.transactionHash)}>
+          <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onSuccess={(res: any) => handleScoreUpdate('defy', res)}>
             <TransactionButton className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF]" text="DEFY (+100)" />
           </Transaction>
         </div>
@@ -290,80 +233,21 @@ export default function Page() {
             const now = Math.floor(Date.now() / 1000);
             const waitTime = Number(lastClaimTime) + 43200; 
             const isWaitMode = now < waitTime && lastClaimTime !== 0n;
-
-            if (isWaitMode) {
-              return (
-                <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">
-                  Wait 12 Hours
-                </button>
-              );
-            }
-
-            if (oracleSignature) {
-              return (
-                <button
-                  onClick={() => {
-                    const cleanSig = oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`;
-                    writeContract({
-                      address: TREASURY_ADDRESS as `0x${string}`,
-                      abi: TREASURY_ABI,
-                      functionName: 'claim',
-                      args: [cleanSig.trim() as `0x${string}`],
-                    });
-                  }}
-                  className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] border-none hover:scale-105 active:scale-95 transition-all"
-                >
-                  Claim 15,000 $USERBOX
-                </button>
-              );
-            }
-
-            return (
-              <button 
-                onClick={getNewProphecy}
-                disabled={isSigning}
-                className="w-full bg-gray-500/20 border-2 border-white/10 text-white/60 font-black py-4 rounded-2xl text-[10px] uppercase transition-all"
-              >
-                {isSigning ? "Oracle is signing..." : signStatus}
-              </button>
-            );
+            if (isWaitMode) return <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">Wait 12 Hours</button>;
+            if (oracleSignature) return <button onClick={() => { const cleanSig = oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`; writeContract({ address: TREASURY_ADDRESS as `0x${string}`, abi: TREASURY_ABI, functionName: 'claim', args: [cleanSig.trim() as `0x${string}`] }); }} className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)]">Claim 15,000 $USERBOX</button>;
+            return <button onClick={getNewProphecy} disabled={isSigning} className="w-full bg-gray-500/20 border-2 border-white/10 text-white/60 font-black py-4 rounded-2xl text-[10px] uppercase">{isSigning ? "Oracle is signing..." : signStatus}</button>;
           })()}
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center">
-            <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Base Score</p>
-            <p className="text-2xl font-mono font-black text-white">{txCount ?? "191"}</p>
-          </div>
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center">
-            <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p>
-            <p className="text-2xl font-mono font-black text-[#FF00FF]">{oracleScore}</p>
-          </div>
+          <div className="bg-black/30 rounded-[1.5rem] py-4 text-center border border-white/10"><p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Base Score</p><p className="text-2xl font-mono font-black">{txCount ?? "191"}</p></div>
+          <div className="bg-black/30 rounded-[1.5rem] py-4 text-center border border-[#FF00FF]/20"><p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p><p className="text-2xl font-mono font-black text-[#FF00FF]">{oracleScore}</p></div>
         </div>
 
-        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">
-          Share My Prophecy ↗
-        </button>
-
-        <div className="bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
-          <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between">
-            <span>Recent Visions</span>
-            <span className="text-blue-400">by Alchemy</span>
-          </p>
-          <div className="space-y-2 max-h-[100px] overflow-y-auto text-[10px]">
-            {transactions.length > 0 ? transactions.slice(0, 3).map((tx: any, i: number) => (
-                <div key={i} className="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5">
-                  <p className="font-bold uppercase opacity-80">{tx.asset}</p>
-                  <p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p>
-                </div>
-            )) : <p className="text-center opacity-30 italic">Searching the blockchain...</p>}
-          </div>
-        </div>
+        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase">Share My Prophecy ↗</button>
       </main>
 
-      <footer className="mt-8 mb-10 text-center opacity-40">
-        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V14</p>
-      </footer>
+      <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V14</p></footer>
     </div>
   );
 }
