@@ -152,7 +152,9 @@ export default function Page() {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                   : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
                   : `🔮 My Prophecy: "${oracleMessage}"`;
-    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claiming $USERBOX reward!\n\nAccept or Defy your fate! ⚡`;
+    
+    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $USERBOX reward! Next attempt in 12 hours. ⏳\n\nAccept or Defy your fate every 12h! ⚡`;
+    
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
     sdk.actions.openUrl(shareUrl);
@@ -226,7 +228,7 @@ export default function Page() {
       )}
 
       <header className="w-full max-w-md flex justify-between items-center mb-4 px-2">
-        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Oracle Treasury V13</h1>
+        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Oracle Treasury V14</h1>
         <div className="scale-75 origin-right"><Wallet><ConnectWallet className="bg-white text-[#0052FF]" /></Wallet></div>
       </header>
 
