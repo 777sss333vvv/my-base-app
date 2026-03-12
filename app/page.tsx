@@ -14,9 +14,6 @@ const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3';
 const TREASURY_ADDRESS = '0xa2d290440AAA8FddFF24b7Aef5fc4dc559F6ecDC'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
-// Хранилище обработанных хэшей вне компонента, чтобы не сбрасывалось при рендерах
-const processedHashes = new Set<string>();
-
 const TREASURY_ABI = [
   {
     "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
@@ -164,9 +161,13 @@ export default function Page() {
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
   const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', txHash: string) => {
-    if (!txHash || processedHashes.has(txHash)) return;
+    if (!txHash) return;
     
-    processedHashes.add(txHash);
+    // Защита от накрутки: проверяем хэш в sessionStorage
+    const isProcessed = sessionStorage.getItem(`tx_${txHash}`);
+    if (isProcessed) return;
+
+    sessionStorage.setItem(`tx_${txHash}`, 'true');
 
     setOracleScore(prev => {
       const newScore = prev + 100;
@@ -179,18 +180,36 @@ export default function Page() {
     fetchContractData();
   }, [triggerBonus, fetchContractData]);
 
+  // Загрузка SDK и бонус +250 за Add App
   useEffect(() => {
     const load = async () => {
       sdk.actions.ready();
       const context = await sdk.context;
       if (context?.user) {
         setUser(context.user);
+
+        // Бонус за добавление приложения с уведомлением
+        const bonusGiven = localStorage.getItem('oracle_bonus_added_v1');
+        if (context.client.added && !bonusGiven) {
+          setOracleScore(prev => {
+            const newScore = prev + 250;
+            localStorage.setItem('oracle_score_v5', newScore.toString());
+            return newScore;
+          });
+          localStorage.setItem('oracle_bonus_added_v1', 'true');
+          
+          // Визуальное уведомление через 1.5 секунды после старта
+          setTimeout(() => {
+            triggerBonus("+250 ADD APP BONUS");
+          }, 1500);
+        }
+
         const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
         if (farcasterConnector && !isConnected) connect({ connector: farcasterConnector });
       }
     };
     load();
-  }, [connectors, isConnected, connect]);
+  }, [connectors, isConnected, connect, triggerBonus]);
 
   useEffect(() => {
     const fetchScore = async () => {
