@@ -12,15 +12,19 @@ export async function POST(req: Request) {
 
     const wallet = new ethers.Wallet(pKey);
 
-    // Хэшируем только адрес кошелька
-    const messageHash = ethers.utils.solidityKeccak256(["address"], [userAddress]);
+    // 1. Приводим адрес к нижнему регистру и проверяем формат 0x...
+    // Это гарантирует, что Solidity и JS видят одни и те же байты.
+    const cleanAddress = userAddress.toLowerCase();
 
-    // Подписываем
+    // 2. Хэшируем точно так же, как abi.encodePacked в Solidity
+    // Используем keccak256 от упакованных байтов адреса
+    const messageHash = ethers.utils.keccak256(cleanAddress);
+
+    // 3. Подписываем массив байтов (EIP-191)
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
   } catch (err: unknown) {
-    // Исправляем ошибку ESLint: типизируем err как unknown и проверяем тип
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ error: 'Sign failed', details: errorMessage }, { status: 500 });
   }
