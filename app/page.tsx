@@ -160,9 +160,14 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-  const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', txHash: string) => {
-    if (!txHash) return;
-    setOracleScore(prev => prev + 100);
+const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', txHash: string) => {
+    // Убираем проверку хеша для мгновенного отклика
+    setOracleScore(prev => {
+      const newScore = prev + 100;
+      localStorage.setItem('oracle_score_v5', newScore.toString());
+      return newScore;
+    });
+    
     setLastChoice(choice);
     triggerBonus("+100 ORACLE SCORE");
     fetchContractData();
