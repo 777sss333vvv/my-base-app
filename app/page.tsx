@@ -14,6 +14,9 @@ const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3';
 const TREASURY_ADDRESS = '0xa2d290440AAA8FddFF24b7Aef5fc4dc559F6ecDC'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
+// Хранилище обработанных хэшей вне компонента, чтобы не сбрасывалось при рендерах
+const processedHashes = new Set<string>();
+
 const TREASURY_ABI = [
   {
     "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
@@ -160,8 +163,11 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', txHash: string) => {
-    // Убираем проверку хеша для мгновенного отклика
+  const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', txHash: string) => {
+    if (!txHash || processedHashes.has(txHash)) return;
+    
+    processedHashes.add(txHash);
+
     setOracleScore(prev => {
       const newScore = prev + 100;
       localStorage.setItem('oracle_score_v5', newScore.toString());
