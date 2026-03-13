@@ -142,7 +142,6 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-  // ИСПРАВЛЕННЫЙ ЗАХВАТ ХЕША С ЗАЩИТОЙ
   const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
     const txHash = response?.transactionHash || response?.hash || response?.receipt?.transactionHash || (response?.calls && response?.calls[0]?.hash);
     
@@ -253,10 +252,20 @@ export default function Page() {
         </div>
 
         <div className="flex gap-3 mb-4">
-          <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onResponse={(res: any) => handleScoreUpdate('accept', res)}>
+          <Transaction 
+            chainId={8453} 
+            calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} 
+            onStatus={((status: any) => { if (status.statusName === 'success') handleScoreUpdate('accept', status.statusData || status); }) as any}
+            onSuccess={((res: any) => handleScoreUpdate('accept', res)) as any}
+          >
             <TransactionButton className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF]" text="FAITH (+100)" />
           </Transaction>
-          <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onResponse={(res: any) => handleScoreUpdate('defy', res)}>
+          <Transaction 
+            chainId={8453} 
+            calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} 
+            onStatus={((status: any) => { if (status.statusName === 'success') handleScoreUpdate('defy', status.statusData || status); }) as any}
+            onSuccess={((res: any) => handleScoreUpdate('defy', res)) as any}
+          >
             <TransactionButton className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF]" text="DEFY (+100)" />
           </Transaction>
         </div>
