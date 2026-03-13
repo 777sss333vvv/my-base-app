@@ -134,56 +134,35 @@ export default function Page() {
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
 const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
-  console.log("DEBUG_FULL_RESPONSE:", response);
-
-  // Теперь мы точно знаем путь: statusData -> transactionReceipts[0] -> transactionHash
+  // Ищем хэш во всех возможных полях, включая глубокий массив OnchainKit
   const txHash = response?.transactionHash || 
                  response?.hash || 
-                 response?.statusData?.transactionReceipts?.[0]?.transactionHash || // ВОТ ОН!
+                 response?.statusData?.transactionReceipts?.[0]?.transactionHash || 
                  response?.receipt?.transactionHash || 
                  response?.statusData?.transactionHash ||
                  (response?.calls && response?.calls[0]?.hash);
 
-  if (!txHash) {
-    // Если это первый вызов (pending), просто выходим и ждем следующего (success)
-    console.log("Still waiting for hash... Status:", response?.statusName);
-    return;
-  }
+  // Если хэша еще нет (статус Pending), просто выходим и ждем следующего вызова
+  if (!txHash) return;
 
-  console.log("SUCCESS! Hash caught:", txHash);
-
+  // Защита от дублей на уровне сессии
   const storageKey = `tx_${txHash}`;
   if (sessionStorage.getItem(storageKey)) return;
 
   sessionStorage.setItem(storageKey, 'true');
 
+  // Обновляем стейт и локальное хранилище
   setOracleScore(prev => {
     const newScore = prev + 100;
     localStorage.setItem('oracle_score_v5', newScore.toString());
     return newScore;
   });
   
+  // Визуальные эффекты и обновление данных контракта
   setLastChoice(choice);
   triggerBonus("+100 ORACLE SCORE");
   if (fetchContractData) fetchContractData();
 }, [triggerBonus, fetchContractData]);
-
-  // ГАРАНТИРОВАННОЕ НАЧИСЛЕНИЕ ЧЕРЕЗ ХУК ХЭША (ПЕРЕНЕСЕНО СЮДА)
-  useEffect(() => {
-    if (hash) {
-      const storageKey = `tx_hook_final_${hash}`;
-      if (!sessionStorage.getItem(storageKey)) {
-        sessionStorage.setItem(storageKey, 'true');
-        setOracleScore(prev => {
-          const newScore = prev + 100;
-          localStorage.setItem('oracle_score_v5', newScore.toString());
-          return newScore;
-        });
-        triggerBonus("+100 ORACLE SCORE");
-        fetchContractData();
-      }
-    }
-  }, [hash, triggerBonus, fetchContractData]);
 
   useEffect(() => {
     const load = async () => {
