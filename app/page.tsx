@@ -134,25 +134,23 @@ export default function Page() {
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
 const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
-  // 1. ВАЖНО: Выводим всё, что прислал OnchainKit, в консоль
   console.log("DEBUG_FULL_RESPONSE:", response);
 
-  // 2. Ищем хэш (добавил еще пару вариантов пути, где он может прятаться)
+  // Теперь мы точно знаем путь: statusData -> transactionReceipts[0] -> transactionHash
   const txHash = response?.transactionHash || 
                  response?.hash || 
+                 response?.statusData?.transactionReceipts?.[0]?.transactionHash || // ВОТ ОН!
                  response?.receipt?.transactionHash || 
                  response?.statusData?.transactionHash ||
-                 response?.transaction?.hash ||
-                 (response?.calls && response?.calls[0]?.hash) ||
-                 response?.metadata?.transactionHash; // новый вариант
+                 (response?.calls && response?.calls[0]?.hash);
 
   if (!txHash) {
-    // Если хэша нет, выводим статус, чтобы понять на каком мы этапе
-    console.log("WAITING... Status is:", response?.status || "unknown");
+    // Если это первый вызов (pending), просто выходим и ждем следующего (success)
+    console.log("Still waiting for hash... Status:", response?.statusName);
     return;
   }
 
-  console.log("SUCCESS! Hash found:", txHash);
+  console.log("SUCCESS! Hash caught:", txHash);
 
   const storageKey = `tx_${txHash}`;
   if (sessionStorage.getItem(storageKey)) return;
