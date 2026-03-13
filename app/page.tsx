@@ -133,34 +133,42 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-  const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
-    const txHash = response?.transactionHash || 
-                   response?.hash || 
-                   response?.receipt?.transactionHash || 
-                   response?.statusData?.transactionHash ||
-                   response?.transaction?.hash ||
-                   (response?.calls && response?.calls[0]?.hash);
+const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
+  // 1. ВАЖНО: Выводим всё, что прислал OnchainKit, в консоль
+  console.log("DEBUG_FULL_RESPONSE:", response);
 
-    if (!txHash) {
-      console.log("Waiting for real transaction hash...");
-      return;
-    }
+  // 2. Ищем хэш (добавил еще пару вариантов пути, где он может прятаться)
+  const txHash = response?.transactionHash || 
+                 response?.hash || 
+                 response?.receipt?.transactionHash || 
+                 response?.statusData?.transactionHash ||
+                 response?.transaction?.hash ||
+                 (response?.calls && response?.calls[0]?.hash) ||
+                 response?.metadata?.transactionHash; // новый вариант
 
-    const storageKey = `tx_${txHash}`;
-    if (sessionStorage.getItem(storageKey)) return;
+  if (!txHash) {
+    // Если хэша нет, выводим статус, чтобы понять на каком мы этапе
+    console.log("WAITING... Status is:", response?.status || "unknown");
+    return;
+  }
 
-    sessionStorage.setItem(storageKey, 'true');
+  console.log("SUCCESS! Hash found:", txHash);
 
-    setOracleScore(prev => {
-      const newScore = prev + 100;
-      localStorage.setItem('oracle_score_v5', newScore.toString());
-      return newScore;
-    });
-    
-    setLastChoice(choice);
-    triggerBonus("+100 ORACLE SCORE");
-    if (fetchContractData) fetchContractData();
-  }, [triggerBonus, fetchContractData]);
+  const storageKey = `tx_${txHash}`;
+  if (sessionStorage.getItem(storageKey)) return;
+
+  sessionStorage.setItem(storageKey, 'true');
+
+  setOracleScore(prev => {
+    const newScore = prev + 100;
+    localStorage.setItem('oracle_score_v5', newScore.toString());
+    return newScore;
+  });
+  
+  setLastChoice(choice);
+  triggerBonus("+100 ORACLE SCORE");
+  if (fetchContractData) fetchContractData();
+}, [triggerBonus, fetchContractData]);
 
   // ГАРАНТИРОВАННОЕ НАЧИСЛЕНИЕ ЧЕРЕЗ ХУК ХЭША (ПЕРЕНЕСЕНО СЮДА)
   useEffect(() => {
