@@ -142,25 +142,49 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-  const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
-    const txHash = response?.transactionHash || response?.hash || response?.receipt?.transactionHash || (response?.calls && response?.calls[0]?.hash);
-    
-    if (!txHash) return;
-    
-    const isProcessed = sessionStorage.getItem(`tx_${txHash}`);
-    if (isProcessed) return;
-    sessionStorage.setItem(`tx_${txHash}`, 'true');
+const handleScoreUpdate = useCallback(
+  (choice: 'accept' | 'defy', response: any) => {
+
+    console.log("TX response:", response);
+
+    const txHash =
+      response?.transactionHash ||
+      response?.hash ||
+      response?.receipt?.transactionHash ||
+      response?.calls?.[0]?.hash ||
+      response?.statusData?.transactionHash;
+
+    if (!txHash) {
+      console.log("No txHash yet, waiting...");
+      return;
+    }
+
+    const storageKey = `tx_${txHash}`;
+
+    if (sessionStorage.getItem(storageKey)) {
+      console.log("TX already processed:", txHash);
+      return;
+    }
+
+    sessionStorage.setItem(storageKey, "true");
 
     setOracleScore(prev => {
       const newScore = prev + 100;
-      localStorage.setItem('oracle_score_v5', newScore.toString());
+      localStorage.setItem("oracle_score_v5", newScore.toString());
       return newScore;
     });
-    
+
     setLastChoice(choice);
+
     triggerBonus("+100 ORACLE SCORE");
-    fetchContractData();
-  }, [triggerBonus, fetchContractData]);
+
+    if (fetchContractData) {
+      fetchContractData();
+    }
+
+  },
+  [triggerBonus, fetchContractData]
+);
 
   useEffect(() => {
     const load = async () => {
