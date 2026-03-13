@@ -142,10 +142,10 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-  // ИСПРАВЛЕННАЯ ЛОГИКА +100 (теперь принимает response целиком)
+  // ИСПРАВЛЕННЫЙ ЗАХВАТ ХЕША С ЗАЩИТОЙ
   const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
-    // ЗАХВАТ ХЭША: Проверяем все возможные поля, которые дает OnchainKit
-    const txHash = response?.transactionHash || response?.hash || response?.receipt?.transactionHash;
+    const txHash = response?.transactionHash || response?.hash || response?.receipt?.transactionHash || (response?.calls && response?.calls[0]?.hash);
+    
     if (!txHash) return;
     
     const isProcessed = sessionStorage.getItem(`tx_${txHash}`);
@@ -163,30 +163,22 @@ export default function Page() {
     fetchContractData();
   }, [triggerBonus, fetchContractData]);
 
-  // Загрузка SDK и бонус +250 за Add App
   useEffect(() => {
     const load = async () => {
       sdk.actions.ready();
       const context = await sdk.context;
       if (context?.user) {
         setUser(context.user);
-
-        // Бонус за добавление приложения с уведомлением
         const bonusGiven = localStorage.getItem('oracle_bonus_added_v1');
         if (context.client.added && !bonusGiven) {
           setOracleScore(prev => {
-            const newScore = prev + 250;
-            localStorage.setItem('oracle_score_v5', newScore.toString());
-            return newScore;
+            const ns = prev + 250;
+            localStorage.setItem('oracle_score_v5', ns.toString());
+            return ns;
           });
           localStorage.setItem('oracle_bonus_added_v1', 'true');
-          
-          // Визуальное уведомление через 1.5 секунды после старта
-          setTimeout(() => {
-            triggerBonus("+250 ADD APP BONUS");
-          }, 1500);
+          setTimeout(() => triggerBonus("+250 ADD APP BONUS"), 1500);
         }
-
         const farcasterConnector = connectors.find((c) => c.id === 'farcaster');
         if (farcasterConnector && !isConnected) connect({ connector: farcasterConnector });
       }
@@ -261,10 +253,10 @@ export default function Page() {
         </div>
 
         <div className="flex gap-3 mb-4">
-          <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onSuccess={(res: any) => handleScoreUpdate('accept', res)}>
+          <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onResponse={(res: any) => handleScoreUpdate('accept', res)}>
             <TransactionButton className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF]" text="FAITH (+100)" />
           </Transaction>
-          <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onSuccess={(res: any) => handleScoreUpdate('defy', res)}>
+          <Transaction chainId={8453} calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} onResponse={(res: any) => handleScoreUpdate('defy', res)}>
             <TransactionButton className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF]" text="DEFY (+100)" />
           </Transaction>
         </div>
@@ -274,80 +266,30 @@ export default function Page() {
             const now = Math.floor(Date.now() / 1000);
             const waitTime = Number(lastClaimTime) + 43200; 
             const isWaitMode = now < waitTime && lastClaimTime !== 0n;
-
-            if (isWaitMode) {
-              return (
-                <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">
-                  Wait 12 Hours
-                </button>
-              );
-            }
-
-            if (oracleSignature) {
-              return (
-                <button
-                  onClick={() => {
-                    const cleanSig = oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`;
-                    writeContract({
-                      address: TREASURY_ADDRESS as `0x${string}`,
-                      abi: TREASURY_ABI,
-                      functionName: 'claim',
-                      args: [cleanSig.trim() as `0x${string}`],
-                    });
-                  }}
-                  className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] border-none hover:scale-105 active:scale-95 transition-all"
-                >
-                  Claim 15,000 $USERBOX
-                </button>
-              );
-            }
-
-            return (
-              <button 
-                onClick={getNewProphecy}
-                disabled={isSigning}
-                className="w-full bg-gray-500/20 border-2 border-white/10 text-white/60 font-black py-4 rounded-2xl text-[10px] uppercase transition-all"
-              >
-                {isSigning ? "Oracle is signing..." : signStatus}
-              </button>
-            );
+            if (isWaitMode) return <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">Wait 12 Hours</button>;
+            if (oracleSignature) return <button onClick={() => { const cleanSig = oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`; writeContract({ address: TREASURY_ADDRESS as `0x${string}`, abi: TREASURY_ABI, functionName: 'claim', args: [cleanSig.trim() as `0x${string}`] }); }} className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] transition-all">Claim 15,000 $USERBOX</button>;
+            return <button onClick={getNewProphecy} disabled={isSigning} className="w-full bg-gray-500/20 border-2 border-white/10 text-white/60 font-black py-4 rounded-2xl text-[10px] uppercase transition-all">{isSigning ? "Oracle is signing..." : signStatus}</button>;
           })()}
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center">
-            <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Base Score</p>
-            <p className="text-2xl font-mono font-black text-white">{txCount ?? "191"}</p>
-          </div>
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center">
-            <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p>
-            <p className="text-2xl font-mono font-black text-[#FF00FF]">{oracleScore}</p>
-          </div>
+          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center"><p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Base Score</p><p className="text-2xl font-mono font-black text-white">{txCount ?? "191"}</p></div>
+          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center"><p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p><p className="text-2xl font-mono font-black text-[#FF00FF]">{oracleScore}</p></div>
         </div>
 
-        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">
-          Share My Prophecy ↗
-        </button>
+        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">Share My Prophecy ↗</button>
 
         <div className="bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
-          <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between">
-            <span>Recent Visions</span>
-            <span className="text-blue-400">by Alchemy</span>
-          </p>
+          <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between"><span>Recent Visions</span><span className="text-blue-400">by Alchemy</span></p>
           <div className="space-y-2 max-h-[100px] overflow-y-auto text-[10px]">
             {transactions.length > 0 ? transactions.slice(0, 3).map((tx: any, i: number) => (
-                <div key={i} className="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5">
-                  <p className="font-bold uppercase opacity-80">{tx.asset}</p>
-                  <p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p>
-                </div>
+                <div key={i} className="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5"><p className="font-bold uppercase opacity-80">{tx.asset}</p><p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p></div>
             )) : <p className="text-center opacity-30 italic">Searching the blockchain...</p>}
           </div>
         </div>
       </main>
 
-      <footer className="mt-8 mb-10 text-center opacity-40">
-        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V14</p>
-      </footer>
+      <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V14</p></footer>
     </div>
   );
 }
