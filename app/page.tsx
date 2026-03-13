@@ -71,15 +71,6 @@ export default function Page() {
     }
   }, [connectedAddress, user, publicClient]);
 
-  useEffect(() => {
-    if (hash) {
-      triggerBonus("CLAIM SUCCESSFUL!");
-      fetchContractData();
-      setOracleSignature(null);
-      setSignStatus("Wait 12 Hours");
-    }
-  }, [hash, fetchContractData, triggerBonus]);
-
   const getSignatureFromOracle = async () => {
     const targetAddress = connectedAddress || user?.custodyAddress;
     if (!targetAddress) {
@@ -142,39 +133,51 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
-  // 1. Собираем хэш из всех возможных мест (включая новые варианты коллеги)
-  const txHash = response?.transactionHash || 
-                 response?.hash || 
-                 response?.receipt?.transactionHash || 
-                 response?.statusData?.transactionHash ||
-                 response?.transaction?.hash ||
-                 (response?.calls && response?.calls[0]?.hash);
+  const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
+    const txHash = response?.transactionHash || 
+                   response?.hash || 
+                   response?.receipt?.transactionHash || 
+                   response?.statusData?.transactionHash ||
+                   response?.transaction?.hash ||
+                   (response?.calls && response?.calls[0]?.hash);
 
-  // 2. ЖЕСТКАЯ ПРОВЕРКА: Если хэша нет, мы не начисляем очки.
-  // Мы просто пишем в консоль, что ждем подтверждения сети.
-  if (!txHash) {
-    console.log("Waiting for real transaction hash...");
-    return;
-  }
+    if (!txHash) {
+      console.log("Waiting for real transaction hash...");
+      return;
+    }
 
-  // 3. Защита от повторов (только по реальному хэшу!)
-  const storageKey = `tx_${txHash}`;
-  if (sessionStorage.getItem(storageKey)) return;
+    const storageKey = `tx_${txHash}`;
+    if (sessionStorage.getItem(storageKey)) return;
 
-  sessionStorage.setItem(storageKey, 'true');
+    sessionStorage.setItem(storageKey, 'true');
 
-  // 4. Начисление
-  setOracleScore(prev => {
-    const newScore = prev + 100;
-    localStorage.setItem('oracle_score_v5', newScore.toString());
-    return newScore;
-  });
-  
-  setLastChoice(choice);
-  triggerBonus("+100 ORACLE SCORE");
-  if (fetchContractData) fetchContractData();
-}, [triggerBonus, fetchContractData]);
+    setOracleScore(prev => {
+      const newScore = prev + 100;
+      localStorage.setItem('oracle_score_v5', newScore.toString());
+      return newScore;
+    });
+    
+    setLastChoice(choice);
+    triggerBonus("+100 ORACLE SCORE");
+    if (fetchContractData) fetchContractData();
+  }, [triggerBonus, fetchContractData]);
+
+  // ГАРАНТИРОВАННОЕ НАЧИСЛЕНИЕ ЧЕРЕЗ ХУК ХЭША (ПЕРЕНЕСЕНО СЮДА)
+  useEffect(() => {
+    if (hash) {
+      const storageKey = `tx_hook_final_${hash}`;
+      if (!sessionStorage.getItem(storageKey)) {
+        sessionStorage.setItem(storageKey, 'true');
+        setOracleScore(prev => {
+          const newScore = prev + 100;
+          localStorage.setItem('oracle_score_v5', newScore.toString());
+          return newScore;
+        });
+        triggerBonus("+100 ORACLE SCORE");
+        fetchContractData();
+      }
+    }
+  }, [hash, triggerBonus, fetchContractData]);
 
   useEffect(() => {
     const load = async () => {
@@ -269,7 +272,6 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
   <Transaction 
     chainId={8453} 
     calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} 
-    // Убрали 'if success', теперь функция сама поймает хэш, когда он придет
     onStatus={((s: any) => handleScoreUpdate('accept', s)) as any}
     onSuccess={((r: any) => handleScoreUpdate('accept', r)) as any}
   >
