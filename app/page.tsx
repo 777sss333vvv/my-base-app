@@ -142,49 +142,39 @@ export default function Page() {
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-const handleScoreUpdate = useCallback(
-  (choice: 'accept' | 'defy', response: any) => {
+const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
+  // 1. Собираем хэш из всех возможных мест (включая новые варианты коллеги)
+  const txHash = response?.transactionHash || 
+                 response?.hash || 
+                 response?.receipt?.transactionHash || 
+                 response?.statusData?.transactionHash ||
+                 response?.transaction?.hash ||
+                 (response?.calls && response?.calls[0]?.hash);
 
-    console.log("TX response:", response);
+  // 2. ЖЕСТКАЯ ПРОВЕРКА: Если хэша нет, мы не начисляем очки.
+  // Мы просто пишем в консоль, что ждем подтверждения сети.
+  if (!txHash) {
+    console.log("Waiting for real transaction hash...");
+    return;
+  }
 
-    const txHash =
-      response?.transactionHash ||
-      response?.hash ||
-      response?.receipt?.transactionHash ||
-      response?.calls?.[0]?.hash ||
-      response?.statusData?.transactionHash;
+  // 3. Защита от повторов (только по реальному хэшу!)
+  const storageKey = `tx_${txHash}`;
+  if (sessionStorage.getItem(storageKey)) return;
 
-    if (!txHash) {
-      console.log("No txHash yet, waiting...");
-      return;
-    }
+  sessionStorage.setItem(storageKey, 'true');
 
-    const storageKey = `tx_${txHash}`;
-
-    if (sessionStorage.getItem(storageKey)) {
-      console.log("TX already processed:", txHash);
-      return;
-    }
-
-    sessionStorage.setItem(storageKey, "true");
-
-    setOracleScore(prev => {
-      const newScore = prev + 100;
-      localStorage.setItem("oracle_score_v5", newScore.toString());
-      return newScore;
-    });
-
-    setLastChoice(choice);
-
-    triggerBonus("+100 ORACLE SCORE");
-
-    if (fetchContractData) {
-      fetchContractData();
-    }
-
-  },
-  [triggerBonus, fetchContractData]
-);
+  // 4. Начисление
+  setOracleScore(prev => {
+    const newScore = prev + 100;
+    localStorage.setItem('oracle_score_v5', newScore.toString());
+    return newScore;
+  });
+  
+  setLastChoice(choice);
+  triggerBonus("+100 ORACLE SCORE");
+  if (fetchContractData) fetchContractData();
+}, [triggerBonus, fetchContractData]);
 
   useEffect(() => {
     const load = async () => {
@@ -275,24 +265,26 @@ const handleScoreUpdate = useCallback(
           <p className="text-sm italic font-medium pl-12 pr-2 text-center">&quot;{oracleMessage}&quot;</p>
         </div>
 
-        <div className="flex gap-3 mb-4">
-          <Transaction 
-            chainId={8453} 
-            calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} 
-            onStatus={((status: any) => { if (status.statusName === 'success') handleScoreUpdate('accept', status.statusData || status); }) as any}
-            onSuccess={((res: any) => handleScoreUpdate('accept', res)) as any}
-          >
-            <TransactionButton className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF]" text="FAITH (+100)" />
-          </Transaction>
-          <Transaction 
-            chainId={8453} 
-            calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} 
-            onStatus={((status: any) => { if (status.statusName === 'success') handleScoreUpdate('defy', status.statusData || status); }) as any}
-            onSuccess={((res: any) => handleScoreUpdate('defy', res)) as any}
-          >
-            <TransactionButton className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF]" text="DEFY (+100)" />
-          </Transaction>
-        </div>
+<div className="flex gap-3 mb-4">
+  <Transaction 
+    chainId={8453} 
+    calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} 
+    // Убрали 'if success', теперь функция сама поймает хэш, когда он придет
+    onStatus={((s: any) => handleScoreUpdate('accept', s)) as any}
+    onSuccess={((r: any) => handleScoreUpdate('accept', r)) as any}
+  >
+    <TransactionButton className="w-full bg-white !text-[#FF00FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#FF00FF]" text="FAITH (+100)" />
+  </Transaction>
+
+  <Transaction 
+    chainId={8453} 
+    calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} 
+    onStatus={((s: any) => handleScoreUpdate('defy', s)) as any}
+    onSuccess={((r: any) => handleScoreUpdate('defy', r)) as any}
+  >
+    <TransactionButton className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-[10px] uppercase border-2 border-[#0052FF]" text="DEFY (+100)" />
+  </Transaction>
+</div>
 
         <div className="mb-6">
           {(() => {
