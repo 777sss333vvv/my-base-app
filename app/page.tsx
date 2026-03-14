@@ -273,13 +273,47 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
   </Transaction>
 </div>
 
-        <div className="mb-6">
+       <div className="mb-6">
           {(() => {
             const now = Math.floor(Date.now() / 1000);
             const waitTime = Number(lastClaimTime) + 43200; 
             const isWaitMode = now < waitTime && lastClaimTime !== 0n;
+
+            // Логика успеха: если есть хеш транзакции, начисляем бонусы
+            if (hash && !sessionStorage.getItem(`claim_${hash}`)) {
+              sessionStorage.setItem(`claim_${hash}`, 'true');
+              triggerBonus("CLAIM SUCCESSFUL");
+              setOracleScore(prev => {
+                const ns = prev + 100;
+                localStorage.setItem('oracle_score_v5', ns.toString());
+                return ns;
+              });
+              if (fetchContractData) fetchContractData();
+            }
+
             if (isWaitMode) return <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">Wait 12 Hours</button>;
-            if (oracleSignature) return <button onClick={() => { const cleanSig = oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`; writeContract({ address: TREASURY_ADDRESS as `0x${string}`, abi: TREASURY_ABI, functionName: 'claim', args: [cleanSig.trim() as `0x${string}`] }); }} className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] transition-all">Claim 15,000 $USERBOX</button>;
+            
+            if (oracleSignature) {
+              const isPending = !!hash; // Блокируем кнопку, если транзакция отправлена
+              return (
+                <button 
+                  onClick={() => { 
+                    const cleanSig = oracleSignature.startsWith('0x') ? oracleSignature : `0x${oracleSignature}`; 
+                    writeContract({ 
+                      address: TREASURY_ADDRESS as `0x${string}`, 
+                      abi: TREASURY_ABI, 
+                      functionName: 'claim', 
+                      args: [cleanSig.trim() as `0x${string}`] 
+                    }); 
+                  }} 
+                  disabled={isPending}
+                  className={`w-full ${isPending ? 'bg-gray-600' : 'bg-[#FF00FF] shadow-[0_0_20px_rgba(255,0,255,0.4)]'} text-white font-black py-5 rounded-2xl text-xs uppercase transition-all`}
+                >
+                  {isPending ? "Processing..." : "Claim 15,000 $USERBOX"}
+                </button>
+              );
+            }
+            
             return <button onClick={getNewProphecy} disabled={isSigning} className="w-full bg-gray-500/20 border-2 border-white/10 text-white/60 font-black py-4 rounded-2xl text-[10px] uppercase transition-all">{isSigning ? "Oracle is signing..." : signStatus}</button>;
           })()}
         </div>
