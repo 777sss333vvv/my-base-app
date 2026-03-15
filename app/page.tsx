@@ -51,7 +51,7 @@ export default function Page() {
 
   const triggerBonus = useCallback((text: string) => {
     setShowBonus({ show: true, text });
-    setTimeout(() => setShowBonus({ show: false, text: "" }), 4000);
+    setTimeout(() => setShowBonus({ show: false, text: "" }), 6000);
   }, []);
 
   const fetchContractData = useCallback(async () => {
@@ -273,28 +273,48 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
   </Transaction>
 </div>
 
-       <div className="mb-6">
+<div className="mb-6">
           {(() => {
             const now = Math.floor(Date.now() / 1000);
             const waitTime = Number(lastClaimTime) + 43200; 
             const isWaitMode = now < waitTime && lastClaimTime !== 0n;
 
-            // Логика успеха: если есть хеш транзакции, начисляем бонусы
-            if (hash && !sessionStorage.getItem(`claim_${hash}`)) {
-              sessionStorage.setItem(`claim_${hash}`, 'true');
-              triggerBonus("CLAIM SUCCESSFUL");
-              setOracleScore(prev => {
-                const ns = prev + 100;
-                localStorage.setItem('oracle_score_v5', ns.toString());
-                return ns;
-              });
-              if (fetchContractData) fetchContractData();
+            // Логика успеха и анимация отправки
+            if (hash && !isWaitMode) {
+                if (!sessionStorage.getItem(`claim_viewed_${hash}`)) {
+                    sessionStorage.setItem(`claim_viewed_${hash}`, 'true');
+                    
+                    // Показываем успех (не забудь в функции triggerBonus поставить 6000)
+                    triggerBonus("SUCCESS: 15,000 $USERBOX SENT");
+                    
+                    setOracleScore(prev => {
+                        const ns = prev + 100;
+                        localStorage.setItem('oracle_score_v5', ns.toString());
+                        return ns;
+                    });
+                    
+                    // Опрашиваем контракт, пока не включится Wait Mode
+                    const interval = setInterval(() => { 
+                      if (fetchContractData) fetchContractData(); 
+                    }, 3000);
+                    setTimeout(() => clearInterval(interval), 20000);
+                }
+                
+                // Та самая "живая" кнопка вместо серого Processing
+                return (
+                  <button disabled className="w-full bg-blue-900/40 border-2 border-blue-500/30 text-white font-black py-5 rounded-2xl text-xs uppercase flex items-center justify-center gap-3">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    <span className="animate-pulse">Sending $USERBOX...</span>
+                  </button>
+                );
             }
 
             if (isWaitMode) return <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">Wait 12 Hours</button>;
             
             if (oracleSignature) {
-              const isPending = !!hash; // Блокируем кнопку, если транзакция отправлена
               return (
                 <button 
                   onClick={() => { 
@@ -306,10 +326,9 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
                       args: [cleanSig.trim() as `0x${string}`] 
                     }); 
                   }} 
-                  disabled={isPending}
-                  className={`w-full ${isPending ? 'bg-gray-600' : 'bg-[#FF00FF] shadow-[0_0_20px_rgba(255,0,255,0.4)]'} text-white font-black py-5 rounded-2xl text-xs uppercase transition-all`}
+                  className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] hover:scale-[1.01] transition-all"
                 >
-                  {isPending ? "Processing..." : "Claim 15,000 $USERBOX"}
+                  Claim 15,000 $USERBOX
                 </button>
               );
             }
