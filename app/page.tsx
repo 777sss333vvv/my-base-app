@@ -11,7 +11,7 @@ import { useAccount, useConnect, usePublicClient, useWriteContract } from 'wagmi
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-const TREASURY_ADDRESS = '0xa2d290440AAA8FddFF24b7Aef5fc4dc559F6ecDC'; 
+const TREASURY_ADDRESS = '0x43940ECb5eae2bb57bcefB9dd376F58a0BBc571e'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
@@ -101,14 +101,16 @@ export default function Page() {
   };
 
   const prophecies = useMemo(() => [
-    "The Oracle has recalibrated. The $USERBOX era begins now. 🔮",
-    "The signals have formed a constellation. ✨",
-    "Base is the soil, $USERBOX is the seed. 🌱",
-    "The Treasury is breathing. 💎",
-    "The prophecy is carved in code. 🛠️",
-    "Your Oracle Score is your shield. 📈",
-    "12 hours of patience leads to wealth. ⏳",
-    "The stars over Base align. 🌊"
+"The Oracle sees a green candle in your future. Hold tight.",
+  "A big whale is watching your wallet. Stay calm.",
+  "Your luck is minting right now. Check the charts.",
+  "The stars have aligned for a 100x journey. Are you ready?",
+  "Someone is talking about your tokens in Warpcast. Believe.",
+  "Your bag is heavy, but your spirit is heavier. Keep going.",
+  "The Prophet says: 'Patience is the ultimate alpha'.",
+  "A mysterious transfer is coming to a loyal holder. Is it you?",
+  "The Oracle smells a massive pump. Don't blink.",
+  "Your wallet is glowing with $USERBOX energy. Pure magic."
   ], []);
 
   const getNewProphecy = () => {
