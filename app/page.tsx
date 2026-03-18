@@ -11,7 +11,7 @@ import { useAccount, useConnect, usePublicClient, useWriteContract } from 'wagmi
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-const TREASURY_ADDRESS = '0x43940ECb5eae2bb57bcefB9dd376F58a0BBc571e'; 
+const TREASURY_ADDRESS = '0x84c8e558D657058E1aF192Cf010885e415EC6340'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
