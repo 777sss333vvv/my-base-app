@@ -264,14 +264,12 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
 
 <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
   
-  {/* ОБНОВЛЕННЫЙ ГИД: СТРЕЛКА СЛЕВА, РАЗМЕР УВЕЛИЧЕН, СДВИНУТ К ОРАКУЛУ */}
+  {/* ГИД БЕЗ МАЛЕНЬКОЙ СТРЕЛКИ, УВЕЛИЧЕН И СДВИНУТ ВПРАВО ОТ ГОЛОВЫ */}
   {showGuideArrow && (
-    <div className="absolute -left-6 top-1/2 -translate-y-1/2 z-50 animate-bounce-horizontal flex items-center gap-3 pointer-events-none origin-left">
-      {/* 1. Стрелка теперь ПЕРЕД текстом и указывает на голову Оракула */}
-      <div className="text-[#FF00FF] text-4xl font-bold">←</div>
+    <div className="absolute left-4 top-1/2 -translate-y-1/2 z-50 animate-bounce-horizontal flex items-center gap-3 pointer-events-none origin-left">
       
-      {/* 2. Шрифт text-sm и крупные отступы (px-4 py-2) дают нужный размер в 1.5 раза больше */}
-      <span className="bg-[#FF00FF] text-white text-sm font-black px-4 py-2 rounded-full shadow-[0_0_20px_rgba(255,0,255,0.8)] whitespace-nowrap uppercase">
+      {/* 2. Текст стал больше (text-sm) и с крупными отступыми, чтобы быть в 1.5 раза крупнее */}
+      <span className="bg-[#FF00FF] text-white text-sm font-black px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,0,255,0.9)] whitespace-nowrap uppercase">
         TAP THE ORACLE
       </span>
     </div>
