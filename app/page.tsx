@@ -129,7 +129,7 @@ export default function Page() {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                   : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
                   : `🔮 My Prophecy: "${oracleMessage}"`;
-    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $USERBOX reward! Next attempt in 12 hours. ⏳\n\nAccept or Defy your fate every 12h! ⚡`;
+    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $USERBOX reward! Next attempt in 6 hours. ⏳\n\nAccept or Defy your fate every 6h! ⚡`;
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
     sdk.actions.openUrl(shareUrl);
@@ -237,7 +237,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
       )}
 
       <header className="w-full max-w-md flex justify-between items-center mb-4 px-2">
-        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Oracle Treasury V14</h1>
+        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Oracle Treasury V16</h1>
         <div className="scale-75 origin-right"><Wallet><ConnectWallet className="bg-white text-[#0052FF]" /></Wallet></div>
       </header>
 
@@ -278,7 +278,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
 <div className="mb-6">
           {(() => {
             const now = Math.floor(Date.now() / 1000);
-            const waitTime = Number(lastClaimTime) + 43200; 
+            const waitTime = Number(lastClaimTime) + 21600; 
             const isWaitMode = now < waitTime && lastClaimTime !== 0n;
 
             // Логика успеха и анимация отправки
@@ -314,7 +314,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
                 );
             }
 
-            if (isWaitMode) return <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">Wait 12 Hours</button>;
+            if (isWaitMode) return <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">Wait 6 Hours</button>;
             
             if (oracleSignature) {
               return (
@@ -356,7 +356,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
         </div>
       </main>
 
-      <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V14</p></footer>
+      <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V16</p></footer>
     </div>
   );
 }
