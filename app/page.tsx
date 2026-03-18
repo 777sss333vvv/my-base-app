@@ -33,6 +33,7 @@ export default function Page() {
   
   const [oracleSignature, setOracleSignature] = useState<string | null>(null);
   const [isSigning, setIsSigning] = useState(false);
+  const [showGuideArrow, setShowGuideArrow] = useState(false);
   const [lastClaimTime, setLastClaimTime] = useState<bigint>(0n);
   const [signStatus, setSignStatus] = useState<string>("Tap Oracle Head to Unlock Claim");
   
@@ -216,6 +217,12 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
     fetchAlchemyData();
   }, [connectedAddress, user]);
 
+  useEffect(() => {
+  setShowGuideArrow(true);
+  const timer = setTimeout(() => setShowGuideArrow(false), 7000);
+  return () => clearTimeout(timer);
+}, []);
+
   return (
     <div className="min-h-screen bg-[#0052FF] text-white flex flex-col items-center p-4 font-sans overflow-x-hidden relative">
       <style jsx global>{`
@@ -226,6 +233,13 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
             85% { opacity: 1; transform: translate(-50%, 0); }
             100% { opacity: 0; transform: translate(-50%, -20px); }
         }
+        @keyframes bounce-horizontal {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-15px); } /* Чуть увеличил амплитуду для заметности */
+}
+.animate-bounce-horizontal {
+  animation: bounce-horizontal 1s infinite;
+}    
         .animate-oracle-sync { animation: floatSync 3s ease-in-out infinite; }
         .animate-fade-center { animation: fadeUpCenter 4s forwards; }
       `}</style>
@@ -248,12 +262,24 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
           <h2 className="text-lg font-black mt-2 tracking-tight">{user ? `@${user.username}` : "Base Traveler"}</h2>
         </div>
 
-        <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
-          <button onClick={getNewProphecy} className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-all z-20 overflow-hidden" style={{ width: '4.8rem', height: '4.8rem' }}>
-            <img src={TOKEN_IMAGE} className="w-full h-full object-cover rounded-full" alt="Oracle" />
-          </button>
-          <p className="text-sm italic font-medium pl-12 pr-2 text-center">&quot;{oracleMessage}&quot;</p>
-        </div>
+<div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
+  
+  {/* НОВЫЙ КУСОК СО СТРЕЛКОЙ */}
+  {showGuideArrow && (
+    <div className="absolute right-2 top-1/2 -translate-y-1/2 z-50 animate-bounce-horizontal flex items-center gap-2 pointer-events-none">
+      <span className="bg-[#FF00FF] text-white text-[10px] font-black px-3 py-1 rounded-full shadow-[0_0_15px_rgba(255,0,255,0.6)] whitespace-nowrap">
+        TAP THE ORACLE
+      </span>
+      <div className="text-[#FF00FF] text-2xl font-bold">←</div>
+    </div>
+  )}
+
+  <button onClick={getNewProphecy} className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-all z-20 overflow-hidden" style={{ width: '4.8rem', height: '4.8rem' }}>
+    <img src={TOKEN_IMAGE} className="w-full h-full object-cover rounded-full" alt="Oracle" />
+  </button>
+  
+  <p className="text-sm italic font-medium pl-12 pr-2 text-center">&quot;{oracleMessage}&quot;</p>
+</div>
 
 <div className="flex gap-3 mb-4">
   <Transaction 
