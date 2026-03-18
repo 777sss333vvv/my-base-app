@@ -264,12 +264,12 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
 
 <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
   
-  {/* ГИД БЕЗ МАЛЕНЬКОЙ СТРЕЛКИ, УВЕЛИЧЕН И СДВИНУТ ВПРАВО ОТ ГОЛОВЫ */}
+  {/* ГИД: БОЛЬШОЙ, БЕЗ СТРЕЛКИ, СМЕЩЕН ВПРАВО НА ТЕКСТ */}
   {showGuideArrow && (
-    <div className="absolute left-4 top-1/2 -translate-y-1/2 z-50 animate-bounce-horizontal flex items-center gap-3 pointer-events-none origin-left">
+    <div className="absolute left-1/4 top-1/2 -translate-y-1/2 z-50 animate-bounce-horizontal flex items-center pointer-events-none">
       
-      {/* 2. Текст стал больше (text-sm) и с крупными отступыми, чтобы быть в 1.5 раза крупнее */}
-      <span className="bg-[#FF00FF] text-white text-sm font-black px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,0,255,0.9)] whitespace-nowrap uppercase">
+      {/* Увеличенный в 1.5 раза текст, висит поверх пророчества */}
+      <span className="bg-[#FF00FF] text-white text-sm font-black px-6 py-3 rounded-full shadow-[0_0_25px_rgba(255,0,255,1)] whitespace-nowrap uppercase">
         TAP THE ORACLE
       </span>
     </div>
