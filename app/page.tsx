@@ -130,7 +130,7 @@ export default function Page() {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                   : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
                   : `🔮 My Prophecy: "${oracleMessage}"`;
-    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $USERBOX reward! Next attempt in 6 hours. ⏳\n\nAccept or Defy your fate every 6h! ⚡`;
+    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $USERBOX reward! Next attempt in 6 hours. ⏳\n\nAccept or Defy your fate every 6h via @userbox ! ⚡`;
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
     sdk.actions.openUrl(shareUrl);
