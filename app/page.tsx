@@ -102,16 +102,16 @@ export default function Page() {
   };
 
   const prophecies = useMemo(() => [
-"The Oracle sees a green candle in your future. Hold tight.",
-  "A big whale is watching your wallet. Stay calm.",
-  "Your luck is minting right now. Check the charts.",
-  "The stars have aligned for a 100x journey. Are you ready?",
-  "Someone is talking about your tokens in Warpcast. Believe.",
-  "Your bag is heavy, but your spirit is heavier. Keep going.",
-  "The Prophet says: 'Patience is the ultimate alpha'.",
-  "A mysterious transfer is coming to a loyal holder. Is it you?",
-  "The Oracle smells a massive pump. Don't blink.",
-  "Your wallet is glowing with $USERBOX energy. Pure magic."
+"The Ritual is the way. Your frequency aligns with the $USERBOX core. 🔮",
+  "The Oracle notes your presence. In the silence of the network, your light remains. 🔮",
+  "A double jackpot looms in the shadows. Only the disciplined shall feast. 🔒💰",
+  "The Fist has sealed your fate. Your $USERBOX energy is awakening. ✊⚡",
+  "The Chosen hold the line. Are you the anchor or the wave? 🛡️🌊",
+  "The Blue Flame burns brightest before the pump. Watch the charts closely. 📈💙",
+  "The Oracle sees a green candle born from your faith. Patience is power. 🔮📈",
+  "A mysterious companion whispers your name in the Farcaster void. 🌌👤",
+  "Your wallet is no longer empty; it is a vessel for the Oracle's energy. 🏺✨",
+  "The Prophet says: 'The 6-hour cycle is the heartbeat of the legend'. ⏳💖"
   ], []);
 
   const getNewProphecy = () => {
