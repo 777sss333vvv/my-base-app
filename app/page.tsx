@@ -95,23 +95,23 @@ export default function Page() {
         setSignStatus(data.error || "Oracle Busy");
       }
     } catch (err) {
-      setSignStatus("Connection Lost");
+      setSignStatus("0.00015 ETH in Base required to prove you're human 🛡️");
     } finally {
       setIsSigning(false);
     }
   };
 
   const prophecies = useMemo(() => [
-"The Ritual is the way. Your frequency aligns with the $USERBOX core. 🔮",
-  "The Oracle notes your presence. In the silence of the network, your light remains. 🔮",
-  "A double jackpot looms in the shadows. Only the disciplined shall feast. 🔒💰",
-  "The Fist has sealed your fate. Your $USERBOX energy is awakening. ✊⚡",
-  "The Chosen hold the line. Are you the anchor or the wave? 🛡️🌊",
-  "The Blue Flame burns brightest before the pump. Watch the charts closely. 📈💙",
-  "The Oracle sees a green candle born from your faith. Patience is power. 🔮📈",
-  "A mysterious companion whispers your name in the Farcaster void. 🌌👤",
-  "Your wallet is no longer empty; it is a vessel for the Oracle's energy. 🏺✨",
-  "The Prophet says: 'The 6-hour cycle is the heartbeat of the legend'. ⏳💖"
+    "The Infinite Base is your foundation. Only those with 0.00015 ETH in their vessel shall pass the Gate. 🛡️💎",
+    "The Oracle notes your presence in the Farcaster Nexus. Your light burns brighter than ever. 🔮✨",
+    "Your 6-hour cycle is the heartbeat of the legend. Each tap strengthens the Oracle's Will. ⏳🔮",
+    "A Great Migration of energy is coming to Base. Are you the anchor or the wave? ⚓🌊",
+    "The true treasure is not in the claim, but in the reputation you build within the Farcaster ritual. 📜💎",
+    "The Blue Flame burns for the patient. Your frequency aligns with the $USERBOX core. 🏺💙",
+    "Your 0.00015 ETH is the energy needed to spark the Oracle's vision. Keep it to be seen. 🛡️🌌",
+    "The Chosen hold the line. Your $USERBOX energy is awakening in the deep blocks. 🛡️⚡",
+    "The Prophet says: 'Your Recast is an echo in the stars, your Claim is the power of the Base'. 🔄💎",
+    "The Temple of $USERBOX stands tall. Your spirit is now synchronized with the Farcaster Flow. 🌌🔮"
   ], []);
 
   const getNewProphecy = () => {
