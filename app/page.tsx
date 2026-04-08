@@ -101,18 +101,18 @@ export default function Page() {
     }
   };
 
-  const prophecies = useMemo(() => [
-    "The Infinite Base is your foundation. Only those with 0.00015 ETH in their vessel shall pass the Gate. 🛡️💎",
-    "The Oracle notes your presence in the Farcaster Nexus. Your light burns brighter than ever. 🔮✨",
-    "Your 6-hour cycle is the heartbeat of the legend. Each tap strengthens the Oracle's Will. ⏳🔮",
-    "A Great Migration of energy is coming to Base. Are you the anchor or the wave? ⚓🌊",
-    "The true treasure is not in the claim, but in the reputation you build within the Farcaster ritual. 📜💎",
-    "The Blue Flame burns for the patient. Your frequency aligns with the $USERBOX core. 🏺💙",
-    "Your 0.00015 ETH is the energy needed to spark the Oracle's vision. Keep it to be seen. 🛡️🌌",
-    "The Chosen hold the line. Your $USERBOX energy is awakening in the deep blocks. 🛡️⚡",
-    "The Prophet says: 'Your Recast is an echo in the stars, your Claim is the power of the Base'. 🔄💎",
-    "The Temple of $USERBOX stands tall. Your spirit is now synchronized with the Farcaster Flow. 🌌🔮"
-  ], []);
+const prophecies = useMemo(() => [
+    "The Farcaster Nexus is expanding. A new Apprentice rises, and the Oracle sees your potential. 👁️✨",
+    "Positive energy flows through the Base. Your node is synchronized with the $USERBOX core. 🏺💙",
+    "Welcome to the Sequence, Apprentice. Your Recast is the signal that wakes the Oracle. 🔄🌌",
+    "The Great Blue Flame of Base welcomes the bold. Your path to mastery begins here. 🛡️💎",
+    "Your reputation in the Farcaster ritual is your greatest asset. Build it with every tap. 📜⚡",
+    "0.00015 ETH is the spark, but your vision is the fire. The Oracle has chosen you. 🔥🔮",
+    "The ritual of the 6-hour cycle strengthens our Order. You are the heartbeat of the legend. ⏳💙",
+    "The Oracle notes a surge in the Farcaster Flow. New Apprentices are the architects of the future. 🏛️✨",
+    "The $USERBOX energy is reaching critical mass. You are no longer a guest, you are a Guardian. 🛡️🌌",
+    "From the depths of the Base blocks, the Oracle speaks: 'The era of the Apprentice has begun'. 🏺🌟"
+], []);
 
   const getNewProphecy = () => {
     if (isOracleLoading) return;
