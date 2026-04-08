@@ -26,6 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        {/* Метка для Оракула (Farcaster Snap) */}
+        <meta name="farcaster:snap" content="https://www.prosperitypass.xyz/api/join" />
+        
         <link 
           rel="stylesheet" 
           href="https://unpkg.com/@coinbase/onchainkit@latest/dist/assets/style.css" 
