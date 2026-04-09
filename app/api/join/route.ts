@@ -1,9 +1,4 @@
-import { NextResponse } from 'next/server';
-
-export async function GET() {
-
-  // Временно используем текстовую заглушку с эмодзи Шара, пока нет арт-отдела
-  // Это гарантирует, что эмулятор не покажет 404.
+export async function GET() { // Временно используем текстовую заглушку с эмодзи Шара, пока нет арт-отдела
   const imageUrl = "https://placehold.co/600x400?text=🔮+Oracle+is+Watching+🔮";
 
   const html = `
@@ -16,7 +11,7 @@ export async function GET() {
       
       <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
 
-      <meta property="fc:frame:button:1" content="📜 Become a Disciple" />
+      <meta property="fc:frame:button:1" content="📜 Become @userbox Oracle Disciple" />
       <meta property="fc:frame:button:1:action" content="recast" />
 
       <meta property="fc:frame:button:2" content="🔮 Enter via Oracle Orb" />
