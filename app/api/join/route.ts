@@ -1,54 +1,40 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const snapResponse = {
-    "type": "frame",
-    "version": "1.0",
-    "ui": {
-      "elements": [
-        {
-          "type": "text",
-          "content": "👁️ THE ORACLE IS WATCHING \n Become an Apprentice to unlock the Vault."
-        },
-        {
-          "type": "button",
-          "content": "1. Join the Sequence (Recast)",
-          "action": {
-            "type": "post",
-            "target": "https://warpcast.com/~/recast?text=I am becoming an apprentice of the Oracle 👁️ by @userbox" 
-          }
-        },
-        {
-          "type": "button",
-          "content": "2. Enter the Vault ↗",
-          "action": {
-            "type": "link",
-            "target": "https://www.prosperitypass.xyz/"
-          }
-        }
-      ]
-    }
-  };
 
-  return new NextResponse(JSON.stringify(snapResponse), {
-    status: 200,
+  // Временно используем текстовую заглушку с эмодзи Шара, пока нет арт-отдела
+  // Это гарантирует, что эмулятор не покажет 404.
+  const imageUrl = "https://placehold.co/600x400?text=🔮+Oracle+is+Watching+🔮";
+
+  const html = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta property="fc:frame" content="vNext" />
+      
+      <meta property="fc:frame:image" content="${imageUrl}" />
+      
+      <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
+
+      <meta property="fc:frame:button:1" content="📜 Become a Disciple" />
+      <meta property="fc:frame:button:1:action" content="recast" />
+
+      <meta property="fc:frame:button:2" content="🔮 Enter via Oracle Orb" />
+      <meta property="fc:frame:button:2:action" content="link" />
+      <meta property="fc:frame:button:2:target" content="https://www.prosperitypass.xyz/" />
+
+      <meta property="fc:frame:post_url" content="https://www.prosperitypass.xyz/api/join" />
+    </head>
+  </html>
+  `;
+
+  return new Response(html, {
     headers: {
-      'Content-Type': 'application/vnd.farcaster.snap+json',
-      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'text/html',
     },
   });
 }
 
 export async function POST() {
   return GET();
-}
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Farcaster-Auth-Token',
-    },
-  });
 }
