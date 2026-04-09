@@ -1,25 +1,34 @@
-export async function GET() {
-  const imageUrl = "https://placehold.co/600x400?text=🔮+Oracle+is+Watching+🔮";
+export async function GET(req: Request) {
+  // Находим текущий индекс через параметры запроса, чтобы кнопка "Next" работала
+  const { searchParams } = new URL(req.url);
+  const index = parseInt(searchParams.get("i") || "0");
+
+  const disciples = [
+    { name: "gordi555.base.eth", fid: 421469 }, // @gordi555.base.eth
+    { name: "negen", fid: 418146 },             // @negen
+    { name: "archii", fid: 433433 }             // @archii
+  ];
+
+  // Выбираем текущего ученика по индексу
+  const current = disciples[index % disciples.length];
+  const nextIndex = (index + 1) % disciples.length;
 
   const html = `
   <!DOCTYPE html>
   <html>
     <head>
-
+    
       <meta property="fc:frame" content="vNext" />
+      <meta property="fc:frame:image" content="https://placehold.co/600x400?text=🔮+Oracle+is+Watching+🔮\nDisciple:+@${current.name}" />
 
-      <meta property="fc:frame:image" content="${imageUrl}" />
+      <meta property="fc:frame:button:1" content="📜 Show Next Disciple" />
+      <meta property="fc:frame:button:1:action" content="post" />
 
-      <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
-
-      <meta property="fc:frame:button:1" content="📜 Become @userbox Oracle Disciple" />
-      <meta property="fc:frame:button:1:action" content="recast" />
-
-      <meta property="fc:frame:button:2" content="🔮 Launch App" />
+      <meta property="fc:frame:button:2" content="🔗 View @${current.name}" />
       <meta property="fc:frame:button:2:action" content="link" />
-      <meta property="fc:frame:button:2:target" content="https://www.prosperitypass.xyz/" />
+      <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/profiles/${current.fid}" />
 
-      <meta property="fc:frame:post_url" content="https://www.prosperitypass.xyz/api/join" />
+      <meta property="fc:frame:post_url" content="https://www.prosperitypass.xyz/api/join?i=${nextIndex}" />
     </head>
     <body></body>
   </html>
@@ -27,23 +36,15 @@ export async function GET() {
 
   return new Response(html, {
     headers: {
-      "Content-Type": "text/html",
-      "Access-Control-Allow-Origin": "*", // Чтобы эмулятор не ругался на CORS
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    },
-  });
-}
-
-// Добавляем OPTIONS, чтобы ошибка со скриншота ушла навсегда
-export async function OPTIONS() {
-  return new Response(null, {
-    headers: {
+ 
+   "Content-Type": "text/html",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     },
   });
 }
 
-export async function POST() {
-  return GET();
+// Чтобы кнопка "Next" обновляла экран, POST должен возвращать GET с новым индексом
+export async function POST(req: Request) {
+  return GET(req);
 }
