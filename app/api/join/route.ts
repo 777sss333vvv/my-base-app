@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     { name: "negen", fid: 418146 },
     { name: "archii", fid: 433433 }
   ];
-  
+
 
   const current = disciples[index % disciples.length];
   const nextIndex = (index + 1) % disciples.length;
@@ -24,6 +24,9 @@ export async function GET(req: Request) {
 <meta property="og:title"
 content="Oracle Disciples" />
 
+<meta property="og:description"
+content="Interactive Snap" />
+
 <meta property="og:image"
 content="https://placehold.co/1200x630?text=Oracle" />
 
@@ -36,7 +39,10 @@ content="vNext" />
 
 
 <meta property="fc:frame:image"
-content="https://placehold.co/600x400?text=@${current.name}" />
+content="https://placehold.co/600x400?text=Oracle+Disciple" />
+
+<meta property="fc:frame:image:aspect_ratio"
+content="1.91:1" />
 
 
 <meta property="fc:frame:button:1"
