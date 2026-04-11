@@ -39,7 +39,7 @@ content="vNext" />
 
 
 <meta property="fc:frame:image"
-content="https://placehold.co/600x400?text=Oracle+Disciple" />
+content="https://placehold.co/600x400?text=@${current.name}" />
 
 <meta property="fc:frame:image:aspect_ratio"
 content="1.91:1" />
