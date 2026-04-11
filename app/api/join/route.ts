@@ -12,42 +12,32 @@ export async function GET(req: Request) {
 
   const current = disciples[index % disciples.length];
   const nextIndex = (index + 1) % disciples.length;
-  
-  // Ссылка строго на этот же файл
-  const baseUrl = "https://www.prosperitypass.xyz/api/join";
+  const url = `https://www.prosperitypass.xyz/api/join?i=${nextIndex}`;
 
-  const html = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <title>Oracle View</title>
-      
-      <meta property="og:title" content="Oracle Disciples" />
-      <meta property="og:image" content="https://placehold.co/1200x630/000000/FFFFFF?text=Oracle+Disciple+@${current.name}" />
+  const html = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta property="og:title" content="Oracle: Become a Disciple" />
+    <meta property="og:image" content="https://placehold.co/1200x630/000000/FFFFFF?text=Become+an+Oracle+Disciple" />
+    
+    <meta property="fc:frame" content="vNext" />
+    <meta property="fc:frame:image" content="https://placehold.co/600x400/000000/FFFFFF?text=Oracle+Hierarchy%0ACurrent:+@${current.name}%0A%0AJoin+the+Prophecy" />
+    
+    <meta property="fc:frame:button:1" content="Next Disciple 📜" />
+    <meta property="fc:frame:button:1:action" content="post" />
+    <meta property="fc:frame:post_url" content="${url}" />
+    
+    <meta property="fc:frame:button:2" content="Become a Disciple 🔮" />
+    <meta property="fc:frame:button:2:action" content="link" />
+    <meta property="fc:frame:button:2:target" content="https://www.prosperitypass.xyz/" />
 
-      <meta property="fc:frame" content="vNext" />
-      <meta property="fc:frame:image" content="https://placehold.co/600x400/000000/FFFFFF?text=🔮+Oracle+is+Watching+🔮%0ADisciple:+@${current.name}" />
-      <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
-
-      <meta property="fc:frame:button:1" content="📜 Show Next Disciple" />
-      <meta property="fc:frame:button:1:action" content="post" />
-
-      <meta property="fc:frame:button:2" content="🔗 View @${current.name}" />
-      <meta property="fc:frame:button:2:action" content="link" />
-      <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/profiles/${current.fid}" />
-
-      <meta property="fc:frame:post_url" content="${baseUrl}?i=${nextIndex}" />
-    </head>
-    <body></body>
-  </html>
-  `;
+    <meta http-equiv="refresh" content="0; url=https://www.prosperitypass.xyz/" />
+  </head>
+  <body></body>
+</html>`;
 
   return new Response(html, {
-    headers: {
-      "Content-Type": "text/html",
-      "Access-Control-Allow-Origin": "*",
-
-    },
+    headers: { "Content-Type": "text/html" }
   });
 }
 
