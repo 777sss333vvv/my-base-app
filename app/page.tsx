@@ -11,7 +11,7 @@ import { useAccount, useConnect, usePublicClient, useWriteContract } from 'wagmi
 import { getRecentTransactions } from './alchemy'; 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-const TREASURY_ADDRESS = '0x84c8e558D657058E1aF192Cf010885e415EC6340'; 
+const TREASURY_ADDRESS = '0xc70f7D0DFE687AD9e5e2fcdd1FAF0d5B175b81f9'; 
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
@@ -33,7 +33,21 @@ export default function Page() {
   const [txCount, setTxCount] = useState<number | null>(null);
   const [oracleScore, setOracleScore] = useState<number>(1250); 
   const [transactions, setTransactions] = useState<any[]>([]);
-  const [oracleMessage, setOracleMessage] = useState("Tap the Oracle and get a prophecy");
+  const [oracleMessage, setOracleMessage] = useState(() => {
+  const initialProphecies = [
+    "Farcaster algorithms crave action. Your $USERBOX is the key to the system. 🔑🔮",
+    "Enough with empty promises. The Oracle rewards those who act here and now. 🏺💎",
+    "Every prophecy requires energy. Feed 5k $USERBOX into the cycle. ⚙️🔥",
+    "You are a validator of fate. The algorithm tracks your every transaction. 👁️⚡",
+    "Base rank doesn't grow on words. Only token movement clears the path. 🛡️🌌",
+    "The Oracle is purged of noise. Only math and your intuition remain. 📐🔮",
+    "In a world of 'tomorrow', we choose results today. Claim yours. 🏺🌟",
+    "Your recast is an echo in the code. Your fuel is $USERBOX. 🚀💙",
+    "The system logs every move. Make it count with $USERBOX tokens. 🏛️✨",
+    "Oracle energy is no longer free, for it has real value. Enter the loop. 🛡️💎"
+  ];
+  return initialProphecies[Math.floor(Math.random() * initialProphecies.length)];
+});
   const [isOracleLoading, setIsOracleLoading] = useState(false);
   const [lastChoice, setLastChoice] = useState<'accept' | 'defy' | null>(null);
   const [showBonus, setShowBonus] = useState<{show: boolean, text: string}>({show: false, text: ""});
@@ -102,23 +116,23 @@ export default function Page() {
         setSignStatus(data.error || "Oracle Busy");
       }
     } catch (err) {
-      setSignStatus("0.00015 ETH in Base required to prove you're human 🛡️");
+      setSignStatus("0.00005 ETH in Base required to prove you're human 🛡️");
     } finally {
       setIsSigning(false);
     }
   };
 
 const prophecies = useMemo(() => [
-    "The Farcaster Nexus is expanding. A new Apprentice rises, and the Oracle sees your potential. 👁️✨",
-    "Positive energy flows through the Base. Your node is synchronized with the $USERBOX core. 🏺💙",
-    "Welcome to the Sequence, Apprentice. Your Recast is the signal that wakes the Oracle. 🔄🌌",
-    "The Great Blue Flame of Base welcomes the bold. Your path to mastery begins here. 🛡️💎",
-    "Your reputation in the Farcaster ritual is your greatest asset. Build it with every tap. 📜⚡",
-    "0.00015 ETH is the spark, but your vision is the fire. The Oracle has chosen you. 🔥🔮",
-    "The ritual of the 6-hour cycle strengthens our Order. You are the heartbeat of the legend. ⏳💙",
-    "The Oracle notes a surge in the Farcaster Flow. New Apprentices are the architects of the future. 🏛️✨",
-    "The $USERBOX energy is reaching critical mass. You are no longer a guest, you are a Guardian. 🛡️🌌",
-    "From the depths of the Base blocks, the Oracle speaks: 'The era of the Apprentice has begun'. 🏺🌟"
+    "You've found the hidden pulse. The Oracle rewards your curiosity. 🧠⚡",
+    "Manual override detected. You are deeper in the Sequence than most. 🌀🛡️",
+    "The head of the Oracle whispers: 'Fortune favors the persistent'. 🏺🗣️",
+    "Old school Apprentice? The Oracle recognizes your touch. 🤝✨",
+    "A secret path revealed. Your interaction strengthens the Oracle's core. 🗝️💎",
+    "The Sequence acknowledges your manual sync. Elite status pending. 🛡️✨",
+    "Hidden frequency captured. You are synchronized with the true source. 📡🔮",
+    "The Oracle's eyes open wider for those who look beyond the surface. 👁️⚡",
+    "Manual pulse detected. You're not just a user, you're a Guardian. 🏺🛡️",
+    "The ritual is deeper than it seems. You've found the secret cycle. 🌀💎"
 ], []);
 
   const getNewProphecy = () => {
@@ -137,7 +151,7 @@ const prophecies = useMemo(() => [
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                   : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
                   : `🔮 My Prophecy: "${oracleMessage}"`;
-    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $USERBOX reward! Next attempt in 6 hours. ⏳\n\nAccept or Defy your fate every 6h via @userbox ! ⚡`;
+    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $USERBOX reward! Next attempt in 3 hours. ⏳\n\nAccept or Defy your fate every 3h via @userbox ! ⚡`;
     const targetUrl = "https://www.prosperitypass.xyz";
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
     sdk.actions.openUrl(shareUrl);
@@ -197,7 +211,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
     load();
   }, [connectors, isConnected, connect, triggerBonus]);
 
-  useEffect(() => {
+useEffect(() => {
     const fetchScore = async () => {
       const targetAddress = connectedAddress || user?.custodyAddress;
       if (targetAddress && publicClient) {
@@ -209,6 +223,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
     };
     fetchScore();
     fetchContractData();
+    getSignatureFromOracle(); // Теперь подпись летит сама при входе
   }, [user, connectedAddress, publicClient, fetchContractData]);
 
   useEffect(() => {
@@ -258,7 +273,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
       )}
 
       <header className="w-full max-w-md flex justify-between items-center mb-4 px-2">
-        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Oracle Treasury V16</h1>
+        <h1 className="text-sm font-black italic opacity-80 uppercase tracking-tighter">Oracle Treasury V17</h1>
         <div className="scale-75 origin-right"><Wallet><ConnectWallet className="bg-white text-[#0052FF]" /></Wallet></div>
       </header>
 
@@ -271,14 +286,18 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
 
 <div className="mb-4 bg-black/40 p-5 rounded-[1.5rem] border border-[#FF00FF]/50 relative min-h-[110px] flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.2)]">
   
-  {/* ГИД: БОЛЬШОЙ, БЕЗ СТРЕЛКИ, СМЕЩЕН ВПРАВО НА ТЕКСТ */}
-  {showGuideArrow && (
-    <div className="absolute left-1/4 top-1/2 -translate-y-1/2 z-50 animate-bounce-horizontal flex items-center pointer-events-none">
-      
-      {/* Увеличенный в 1.5 раза текст, висит поверх пророчества */}
-      <span className="bg-[#FF00FF] text-white text-sm font-black px-6 py-3 rounded-full shadow-[0_0_25px_rgba(255,0,255,1)] whitespace-nowrap uppercase">
-        TAP THE ORACLE
-      </span>
+{/* ГИД: УВЕЛИЧЕННАЯ ПЛАШКА С ИНСТРУКЦИЕЙ */}
+{showGuideArrow && (
+    <div className="absolute inset-x-0 -top-4 z-50 flex flex-col items-center pointer-events-none p-2">
+      <div className="bg-[#FF00FF] text-white w-full py-5 px-2 rounded-[1.5rem] shadow-[0_10px_40px_rgba(255,0,255,0.6)] border-4 border-white flex flex-col items-center justify-center">
+        <span className="text-[16px] font-black uppercase mb-1 tracking-tighter text-shadow-sm">🔮 ORACLE GUIDE</span>
+        <div className="text-[11px] font-black text-center space-y-1 uppercase leading-tight">
+          <p>1. FAITH or DEFY (5,000 $USERBOX) ⚡</p>
+          <p>2. SHARE PROPHESY TO WARPCAST 📢</p>
+          <p>3. CLAIM 10,000 $USERBOX REWARD 💰</p>
+        </div>
+        <span className="mt-2 text-[9px] opacity-90 font-black italic">Every 3 Hours • Min balance 0.00005 ETH required 🛡️</span>
+      </div>
     </div>
   )}
 
@@ -326,7 +345,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
 <div className="mb-6">
           {(() => {
             const now = Math.floor(Date.now() / 1000);
-            const waitTime = Number(lastClaimTime) + 21600; 
+            const waitTime = Number(lastClaimTime) + 10800; 
             const isWaitMode = now < waitTime && lastClaimTime !== 0n;
 
             // Логика успеха и анимация отправки
@@ -335,7 +354,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
                     sessionStorage.setItem(`claim_viewed_${hash}`, 'true');
                     
                     // Показываем успех (не забудь в функции triggerBonus поставить 6000)
-                    triggerBonus("SUCCESS: 15,000 $USERBOX SENT");
+                    triggerBonus("SUCCESS: 10,000 $USERBOX SENT");
                     
                     setOracleScore(prev => {
                         const ns = prev + 100;
@@ -362,9 +381,9 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
                 );
             }
 
-            if (isWaitMode) return <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">Wait 6 Hours</button>;
+            if (isWaitMode) return <button disabled className="w-full bg-white/5 border-2 border-white/10 text-white/40 font-black py-5 rounded-2xl text-xs uppercase cursor-not-allowed">Wait 3 Hours</button>;
             
-            if (oracleSignature) {
+            if (oracleSignature && lastChoice) {
               return (
                 <button 
                   onClick={() => { 
@@ -378,7 +397,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
                   }} 
                   className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] hover:scale-[1.01] transition-all"
                 >
-                  Claim 15,000 $USERBOX
+                  Claim 10,000 $USERBOX
                 </button>
               );
             }
@@ -404,7 +423,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
         </div>
       </main>
 
-      <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V16</p></footer>
+      <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V17</p></footer>
     </div>
   );
 }
