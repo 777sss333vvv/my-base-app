@@ -19,6 +19,13 @@ const TREASURY_ABI = [
   { "inputs": [{ "internalType": "bytes", "name": "signature", "type": "bytes" }], "name": "claim", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
 ] as const;
 
+// ABI для работы с токеном $USERBOX
+const ERC20_ABI = [
+  { "inputs": [ { "internalType": "address", "name": "to", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "transfer", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "nonpayable", "type": "function" }
+] as const;
+
+const TOKEN_ADDRESS = '0x7ee27f16e32e7070d353fd3fe9e4428a69701f31';
+
 export default function Page() {
   const { data: hash, writeContract } = useWriteContract();
 
@@ -289,7 +296,12 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
 <div className="flex gap-3 mb-4">
   <Transaction 
     chainId={8453} 
-    calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} 
+    calls={[{ 
+      address: TOKEN_ADDRESS as `0x${string}`, 
+      abi: ERC20_ABI, 
+      functionName: 'transfer', 
+      args: [MY_WALLET_ADDRESS as `0x${string}`, BigInt(5000 * 10**18)] 
+    } as any]} 
     onStatus={((s: any) => handleScoreUpdate('accept', s)) as any}
     onSuccess={((r: any) => handleScoreUpdate('accept', r)) as any}
   >
@@ -298,7 +310,12 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
 
   <Transaction 
     chainId={8453} 
-    calls={[{ to: MY_WALLET_ADDRESS as `0x${string}`, value: BigInt(35000000000000), data: '0x' } as any]} 
+    calls={[{ 
+      address: TOKEN_ADDRESS as `0x${string}`, 
+      abi: ERC20_ABI, 
+      functionName: 'transfer', 
+      args: [MY_WALLET_ADDRESS as `0x${string}`, BigInt(5000 * 10**18)] 
+    } as any]} 
     onStatus={((s: any) => handleScoreUpdate('defy', s)) as any}
     onSuccess={((r: any) => handleScoreUpdate('defy', r)) as any}
   >
