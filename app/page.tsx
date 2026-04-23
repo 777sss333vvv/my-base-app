@@ -288,18 +288,19 @@ useEffect(() => {
   
 {/* ГИД: УВЕЛИЧЕННАЯ ПЛАШКА С ИНСТРУКЦИЕЙ */}
 {showGuideArrow && (
-    <div className="absolute inset-x-0 -top-4 z-50 flex flex-col items-center pointer-events-none p-2">
-      <div className="bg-[#FF00FF] text-white w-full py-5 px-2 rounded-[1.5rem] shadow-[0_10px_40px_rgba(255,0,255,0.6)] border-4 border-white flex flex-col items-center justify-center">
+    <div className="absolute inset-x-0 -top-14 z-50 flex flex-col items-center pointer-events-none px-4">
+      {/* Подняли на -top-14 и расширили за счет px-4 вместо p-2 */}
+      <div className="bg-[#FF00FF] text-white w-full py-5 px-3 rounded-[1.5rem] shadow-[0_10px_40px_rgba(255,0,255,0.6)] border-4 border-white flex flex-col items-center justify-center">
         <span className="text-[16px] font-black uppercase mb-1 tracking-tighter text-shadow-sm">🔮 ORACLE GUIDE</span>
         <div className="text-[11px] font-black text-center space-y-1 uppercase leading-tight">
           <p>1. FAITH or DEFY (5,000 $USERBOX) ⚡</p>
-          <p>2. SHARE PROPHESY TO WARPCAST 📢</p>
+          <p>2. SHARE PROPHECY 📢</p> {/* Убрали лишнее и поправили опечатку в Prophecy */}
           <p>3. CLAIM 10,000 $USERBOX REWARD 💰</p>
         </div>
         <span className="mt-2 text-[9px] opacity-90 font-black italic">Every 3 Hours • Min balance 0.00005 ETH required 🛡️</span>
       </div>
     </div>
-  )}
+)}
 
   <button 
     onClick={getNewProphecy} 
