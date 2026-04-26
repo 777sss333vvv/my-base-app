@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     // 1. Защита от спама (Rate Limit по IP - 30 секунд)
     const lastIpRequest = ipCache.get(ip) || 0;
     if (now - lastIpRequest < 30) {
-      return NextResponse.json({ error: 'Slow down! Wait 30s' }, { status: 429 });
+      return NextResponse.json({ error: 'Oracle is thinking...' }, { status: 429 });
     }
     ipCache.set(ip, now);
 
