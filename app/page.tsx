@@ -159,20 +159,19 @@ const prophecies = useMemo(() => [
 
 const handleDonate = useCallback(async () => {
     try {
-      const actions = sdk.actions as typeof sdk.actions & { 
-        sendTransaction: (params: { chainId: number; method: string; params: any }) => Promise<any> 
-      };
-
-      await actions.sendTransaction({
-        chainId: 8453,
-        method: "eth_sendTransaction",
-        params: {
-          abi: [],
-          to: MY_WALLET_ADDRESS as `0x${string}`,
-          value: "100000000000000", // 0.0001 ETH (тестовая сумма)
-        },
-      });
-      triggerBonus("BUILDER SUPPORTED! ☕");
+      const actions = sdk.actions as any; 
+      if (actions && typeof actions.sendTransaction === 'function') {
+        await actions.sendTransaction({
+          chainId: 8453,
+          method: "eth_sendTransaction",
+          params: {
+            abi: [],
+            to: MY_WALLET_ADDRESS as `0x${string}`,
+            value: "100000000000000", 
+          },
+        });
+        triggerBonus("BUILDER SUPPORTED! ☕");
+      }
     } catch (err) {
       console.error("Donation failed", err);
     }
@@ -444,7 +443,7 @@ useEffect(() => {
           </div>
         </div>
 
-        <button onClick={handleDonate} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs uppercase shadow-xl">Support Solo Builder (0.0001 ETH) ☕</button>
+        <button onClick={handleDonate} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs uppercase shadow-xl relative z-[100] mb-8">Support Solo Builder (0.0001 ETH) ☕</button>
       </main>
 
       <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V17</p></footer>
