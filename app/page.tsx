@@ -157,28 +157,7 @@ const prophecies = useMemo(() => [
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
-const handleDonate = useCallback(async () => {
-    try {
-      const actions = sdk.actions as any; 
-      
-      if (actions?.sendTransaction) {
-        await actions.sendTransaction({
-          chainId: 8453,
-          method: "eth_sendTransaction",
-          // Важно: params — это массив, value — HEX-строка
-          params: [{
-            to: MY_WALLET_ADDRESS as `0x${string}`,
-            value: "0x5af3107a4000", // 0.0001 ETH в HEX
-            data: "0x",
-          }],
-        });
-        triggerBonus("BUILDER SUPPORTED! ☕");
-      }
-    } catch (err) {
-      // Если юзер просто закрыл кошелек, это упадет в catch
-      console.error("Donation failed", err);
-    }
-  }, [triggerBonus]);
+
 
 const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
   // Ищем хэш во всех возможных полях, включая глубокий массив OnchainKit
@@ -441,12 +420,21 @@ useEffect(() => {
         </button>
 
         {/* 2. Теперь Donate (Сразу под кнопкой Share) */}
-        <button 
-          onClick={handleDonate} 
-          className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs uppercase shadow-xl mb-4 active:scale-95 transition-transform"
-        >
-          Support Solo Builder (0.0001 ETH) ☕
-        </button>
+        <div className="mb-4">
+  <Transaction 
+    chainId={8453} 
+    calls={[{ 
+      to: MY_WALLET_ADDRESS as `0x${string}`, 
+      value: BigInt(100000000000000) 
+    } as any]}
+    onSuccess={() => triggerBonus("BUILDER SUPPORTED! ☕")}
+  >
+    <TransactionButton 
+      className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-xs uppercase shadow-xl active:scale-95" 
+      text="Support Solo Builder (0.0001 ETH) ☕" 
+    />
+  </Transaction>
+</div>
 
         {/* 3. И только потом блок Alchemy */}
         <div className="bg-black/20 rounded-[1.5rem] px-5 py-3 border border-white/5 mb-8">
