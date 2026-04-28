@@ -157,6 +157,27 @@ const prophecies = useMemo(() => [
     sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
+const handleDonate = useCallback(async () => {
+    try {
+      const actions = sdk.actions as typeof sdk.actions & { 
+        sendTransaction: (params: { chainId: number; method: string; params: any }) => Promise<any> 
+      };
+
+      await actions.sendTransaction({
+        chainId: 8453,
+        method: "eth_sendTransaction",
+        params: {
+          abi: [],
+          to: MY_WALLET_ADDRESS as `0x${string}`,
+          value: "100000000000000", // 0.0001 ETH (тестовая сумма)
+        },
+      });
+      triggerBonus("BUILDER SUPPORTED! ☕");
+    } catch (err) {
+      console.error("Donation failed", err);
+    }
+  }, [triggerBonus]);
+
 const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any) => {
   // Ищем хэш во всех возможных полях, включая глубокий массив OnchainKit
   const txHash = response?.transactionHash || 
@@ -414,14 +435,16 @@ useEffect(() => {
 
         <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">Share My Prophecy ↗</button>
 
-        <div className="bg-black/20 rounded-[1.5rem] p-5 border border-white/5">
-          <p className="text-[8px] font-black uppercase text-white/40 mb-4 flex justify-between"><span>Recent Visions</span><span className="text-blue-400">by Alchemy</span></p>
-          <div className="space-y-2 max-h-[100px] overflow-y-auto text-[10px]">
-            {transactions.length > 0 ? transactions.slice(0, 3).map((tx: any, i: number) => (
-                <div key={i} className="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5"><p className="font-bold uppercase opacity-80">{tx.asset}</p><p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p></div>
-            )) : <p className="text-center opacity-30 italic">Searching the blockchain...</p>}
+        <div className="bg-black/20 rounded-[1.5rem] px-5 py-3 border border-white/5 mb-4">
+          <p className="text-[8px] font-black uppercase text-white/40 mb-2 flex justify-between"><span>Recent Visions</span><span className="text-blue-400">by Alchemy</span></p>
+          <div className="space-y-1 max-h-[60px] overflow-y-auto text-[10px]">
+            {transactions.length > 0 ? transactions.slice(0, 2).map((tx: any, i: number) => (
+                <div key={i} className="bg-white/5 p-2 rounded-xl flex justify-between items-center border border-white/5"><p className="font-bold uppercase opacity-80">{tx.asset}</p><p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p></div>
+            )) : <p className="text-center opacity-30 italic py-1">Searching the blockchain...</p>}
           </div>
         </div>
+
+        <button onClick={handleDonate} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs uppercase shadow-xl">Support Solo Builder (0.0001 ETH) ☕</button>
       </main>
 
       <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V17</p></footer>
