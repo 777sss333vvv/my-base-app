@@ -169,6 +169,7 @@ const handleDonate = useCallback(async () => {
           params: [{
             to: MY_WALLET_ADDRESS as `0x${string}`,
             value: "0x5af3107a4000", // 0.0001 ETH в HEX
+            data: "0x",
           }],
         });
         triggerBonus("BUILDER SUPPORTED! ☕");
@@ -461,7 +462,7 @@ useEffect(() => {
             )) : <p className="text-center opacity-30 italic py-1">Searching the blockchain...</p>}
           </div>
         </div>
-        
+
       </main>
 
       <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V17</p></footer>
