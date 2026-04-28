@@ -160,19 +160,21 @@ const prophecies = useMemo(() => [
 const handleDonate = useCallback(async () => {
     try {
       const actions = sdk.actions as any; 
-      if (actions && typeof actions.sendTransaction === 'function') {
+      
+      if (actions?.sendTransaction) {
         await actions.sendTransaction({
           chainId: 8453,
           method: "eth_sendTransaction",
-          params: {
-            abi: [],
+          // Важно: params — это массив, value — HEX-строка
+          params: [{
             to: MY_WALLET_ADDRESS as `0x${string}`,
-            value: "100000000000000", 
-          },
+            value: "0x5af3107a4000", // 0.0001 ETH в HEX
+          }],
         });
         triggerBonus("BUILDER SUPPORTED! ☕");
       }
     } catch (err) {
+      // Если юзер просто закрыл кошелек, это упадет в catch
       console.error("Donation failed", err);
     }
   }, [triggerBonus]);
@@ -432,18 +434,34 @@ useEffect(() => {
           <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center"><p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p><p className="text-2xl font-mono font-black text-[#FF00FF]">{oracleScore}</p></div>
         </div>
 
-        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">Share My Prophecy ↗</button>
+        {/* 1. Сначала Share (Рекаст) */}
+        <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">
+          Share My Prophecy ↗
+        </button>
 
-        <div className="bg-black/20 rounded-[1.5rem] px-5 py-3 border border-white/5 mb-4">
-          <p className="text-[8px] font-black uppercase text-white/40 mb-2 flex justify-between"><span>Recent Visions</span><span className="text-blue-400">by Alchemy</span></p>
+        {/* 2. Теперь Donate (Сразу под кнопкой Share) */}
+        <button 
+          onClick={handleDonate} 
+          className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs uppercase shadow-xl mb-4 active:scale-95 transition-transform"
+        >
+          Support Solo Builder (0.0001 ETH) ☕
+        </button>
+
+        {/* 3. И только потом блок Alchemy */}
+        <div className="bg-black/20 rounded-[1.5rem] px-5 py-3 border border-white/5 mb-8">
+          <p className="text-[8px] font-black uppercase text-white/40 mb-2 flex justify-between">
+            <span>Recent Visions</span><span className="text-blue-400">by Alchemy</span>
+          </p>
           <div className="space-y-1 max-h-[60px] overflow-y-auto text-[10px]">
             {transactions.length > 0 ? transactions.slice(0, 2).map((tx: any, i: number) => (
-                <div key={i} className="bg-white/5 p-2 rounded-xl flex justify-between items-center border border-white/5"><p className="font-bold uppercase opacity-80">{tx.asset}</p><p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p></div>
+                <div key={i} className="bg-white/5 p-2 rounded-xl flex justify-between items-center border border-white/5">
+                  <p className="font-bold uppercase opacity-80">{tx.asset}</p>
+                  <p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p>
+                </div>
             )) : <p className="text-center opacity-30 italic py-1">Searching the blockchain...</p>}
           </div>
         </div>
-
-        <button onClick={handleDonate} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs uppercase shadow-xl relative z-[100] mb-8">Support Solo Builder (0.0001 ETH) ☕</button>
+        
       </main>
 
       <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V17</p></footer>
