@@ -4,10 +4,19 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Network, Alchemy } from 'alchemy-sdk';
 import { sdk } from '@farcaster/frame-sdk';
 import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
 import { useAccount, useConnect, usePublicClient, useWriteContract } from 'wagmi';
+
+const settings = {
+  apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
+  network: Network.BASE_MAINNET,
+};
+
+const alchemy = new Alchemy(settings);
+
 
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
@@ -229,18 +238,19 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
       const context = await sdk.context;
       if (context?.user) {
         setUser(context.user);
-              const target = (context.user as any).custodyAddress || (context.user as any).address;
-        if (target && publicClient) {
-          try {
-            const count = await publicClient.getTransactionCount({ 
-              address: target as `0x${string}` 
+        const userObj = context.user as any;
+        const target = userObj.custodyAddress || userObj.address;
+        
+        if (target) {
+          alchemy.core.getTransactionCount(target)
+            .then((count) => {
+              setTxCount(Number(count));
+            })
+            .catch((err) => {
+              console.error("Alchemy count error:", err);
+              setTxCount(0); // Убираем точки, если ошибка
             });
-            setTxCount(count); // Обновляем Base Score ( nonce )
-          } catch (e) {
-            console.error("Wagmi score error:", e);
-            setTxCount(0); // Если сеть лагает, ставим 0 вместо 191
-          }
-        } 
+        }
         const bonusGiven = localStorage.getItem('oracle_bonus_added_v1');
         if (context.client.added && !bonusGiven) {
           setOracleScore(prev => {
