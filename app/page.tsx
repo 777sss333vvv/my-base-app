@@ -8,10 +8,11 @@ import { sdk } from '@farcaster/frame-sdk';
 import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
 import { useAccount, useConnect, usePublicClient, useWriteContract } from 'wagmi';
-import { getRecentTransactions } from './alchemy'; 
+
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
 const TREASURY_ADDRESS = '0xc70f7D0DFE687AD9e5e2fcdd1FAF0d5B175b81f9'; 
+const B1_CONTRACT_ADDRESS = '0xbdE06D8E8CC882DDe3f953e8e5a673f7aD4f75e1';
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
@@ -28,11 +29,17 @@ const TOKEN_ADDRESS = '0x7ee27f16e32e7070d353fd3fe9e4428a69701f31';
 
 export default function Page() {
   const { data: hash, writeContract } = useWriteContract();
+const { data: b1Hash, writeContract: writeB1 } = useWriteContract(); 
+
+const [hasFaith, setHasFaith] = useState(false); 
+const [hasDefy, setHasDefy] = useState(false);   
+const [b1Signature, setB1Signature] = useState<string | null>(null);
+const [isB1Signing, setIsB1Signing] = useState(false);
 
   const [user, setUser] = useState<any>(null);
   const [txCount, setTxCount] = useState<number | null>(null);
   const [oracleScore, setOracleScore] = useState<number>(1250); 
-  const [transactions, setTransactions] = useState<any[]>([]);
+
   const [oracleMessage, setOracleMessage] = useState(() => {
   const initialProphecies = [
     "Farcaster algorithms crave action. Your $USERBOX is the key to the system. 🔑🔮",
@@ -122,6 +129,29 @@ export default function Page() {
     }
   };
 
+  const getB1Signature = async () => {
+  const targetAddress = connectedAddress || user?.custodyAddress;
+  if (!targetAddress || !hasFaith || !hasDefy) return;
+  
+  setIsB1Signing(true);
+  try {
+    const response = await fetch('/api/join', { // Путь твоего бывшего снапа
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userAddress: targetAddress }),
+    });
+    const data = await response.json();
+    if (data.signature) setB1Signature(data.signature);
+  } catch (err) { console.error("B1 Sign error"); }
+  finally { setIsB1Signing(false); }
+};
+
+useEffect(() => {
+  if (hasFaith && hasDefy && !b1Signature && !isB1Signing) {
+    getB1Signature();
+  }
+}, [hasFaith, hasDefy, b1Signature, isB1Signing]);
+
 const prophecies = useMemo(() => [
     "You've found the hidden pulse. The Oracle rewards your curiosity. 🧠⚡",
     "Manual override detected. You are deeper in the Sequence than most. 🌀🛡️",
@@ -171,6 +201,9 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
   // Если хэша еще нет (статус Pending), просто выходим и ждем следующего вызова
   if (!txHash) return;
 
+if (choice === 'accept') setHasFaith(true); // ЗАПИСЫВАЕМ НАЖАТИЕ
+if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИЕ
+
   // Защита от дублей на уровне сессии
   const storageKey = `tx_${txHash}`;
   if (sessionStorage.getItem(storageKey)) return;
@@ -213,33 +246,7 @@ const handleScoreUpdate = useCallback((choice: 'accept' | 'defy', response: any)
     load();
   }, [connectors, isConnected, connect, triggerBonus]);
 
-useEffect(() => {
-    const fetchScore = async () => {
-      const targetAddress = connectedAddress || user?.custodyAddress;
-      if (targetAddress && publicClient) {
-        try {
-          const count = await publicClient.getTransactionCount({ address: targetAddress as `0x${string}` });
-          setTxCount(count);
-        } catch { setTxCount(0); }
-      }
-    };
-    fetchScore();
-    fetchContractData();
-    getSignatureFromOracle(); // Теперь подпись летит сама при входе
-  }, [user, connectedAddress, publicClient, fetchContractData]);
 
-  useEffect(() => {
-    async function fetchAlchemyData() {
-      const targetAddress = connectedAddress || user?.custodyAddress;
-      if (targetAddress) {
-        try {
-          const data = await getRecentTransactions(targetAddress);
-          setTransactions(data || []);
-        } catch (err) { console.error(err); } 
-      }
-    }
-    fetchAlchemyData();
-  }, [connectedAddress, user]);
 
   useEffect(() => {
   setShowGuideArrow(true);
@@ -437,19 +444,35 @@ useEffect(() => {
 </div>
 
         {/* 3. И только потом блок Alchemy */}
-        <div className="bg-black/20 rounded-[1.5rem] px-5 py-3 border border-white/5 mb-8">
-          <p className="text-[8px] font-black uppercase text-white/40 mb-2 flex justify-between">
-            <span>Recent Visions</span><span className="text-blue-400">by Alchemy</span>
-          </p>
-          <div className="space-y-1 max-h-[60px] overflow-y-auto text-[10px]">
-            {transactions.length > 0 ? transactions.slice(0, 2).map((tx: any, i: number) => (
-                <div key={i} className="bg-white/5 p-2 rounded-xl flex justify-between items-center border border-white/5">
-                  <p className="font-bold uppercase opacity-80">{tx.asset}</p>
-                  <p className="font-mono text-blue-400 font-bold">{parseFloat(tx.value).toFixed(4)}</p>
-                </div>
-            )) : <p className="text-center opacity-30 italic py-1">Searching the blockchain...</p>}
-          </div>
-        </div>
+<div className="bg-black/40 p-5 rounded-[2rem] border border-[#0052FF]/30 mb-8">
+  <p className="text-[10px] font-black uppercase text-center mb-3 opacity-50 italic">Elite Ritual: B1 Blessing</p>
+  
+  {(!hasFaith || !hasDefy) ? (
+    <div className="text-center py-2">
+      <p className="text-[10px] font-bold text-blue-300 uppercase">Complete Faith & Defy to unlock</p>
+      <div className="flex justify-center gap-2 mt-2">
+        <div className={`w-2 h-2 rounded-full ${hasFaith ? 'bg-green-500 shadow-[0_0_8px_#4ade80]' : 'bg-white/20'}`} />
+        <div className={`w-2 h-2 rounded-full ${hasDefy ? 'bg-green-500 shadow-[0_0_8px_#4ade80]' : 'bg-white/20'}`} />
+      </div>
+    </div>
+  ) : (
+    <button 
+      disabled={!b1Signature || isB1Signing}
+      onClick={() => {
+        if (!b1Signature) return getB1Signature(); // Если подпись еще не пришла
+        writeB1({ 
+          address: '0xbdE06D8E8CC882DDe3f953e8e5a673f7aD4f75e1', // ВСТАВЬ АДРЕС B1 ТУТ
+          abi: TREASURY_ABI, 
+          functionName: 'claim', 
+          args: [b1Signature as `0x${string}`] 
+        });
+      }}
+      className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs uppercase shadow-2xl animate-pulse"
+    >
+      {isB1Signing ? "Blessing Preparing..." : b1Signature ? "The Grand Blessing ✨" : "Unlock Blessing"}
+    </button>
+  )}
+</div>
 
       </main>
 
