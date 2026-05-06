@@ -1,37 +1,28 @@
 import { NextResponse } from 'next/server';
-import { Network, Alchemy } from 'alchemy-sdk';
-
-const settings = {
-  apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || process.env.ALCHEMY_API_KEY,
-  network: Network.BASE_MAINNET,
-};
-
-const alchemy = new Alchemy(settings);
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { address?: string };
-    const address = body.address;
+    const { address } = await request.json();
+    const apiKey = process.env.ALCHEMY_API_KEY || process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
 
-    if (!address || typeof address !== 'string') {
-      return NextResponse.json({ error: 'Invalid address', count: 0 }, { status: 400 });
-    }
+    if (!address) return NextResponse.json({ count: 0 });
 
-    const cleanAddress = address.trim().toLowerCase();
-    const hexCount = await alchemy.core.getTransactionCount(cleanAddress);
-    const count = Number(hexCount);
+    const response = await fetch(`https://base-mainnet.g.alchemy.com/v2/${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "eth_getTransactionCount",
+        params: [address.toLowerCase(), "latest"]
+      }),
+    });
 
-    console.log(`Alchemy Success: ${cleanAddress} has ${count} txs`);
+    const data = await response.json();
+    const count = data.result ? parseInt(data.result, 16) : 0;
     
     return NextResponse.json({ count });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown alchemy error';
-    console.error('Alchemy Critical Error:', message);
-    
-    // Возвращаем 125 только для отладки, если API ключ не сработал
-    return NextResponse.json(
-      { count: 125, error: message }, 
-      { status: 500 }
-    );
+  } catch (err) {
+    return NextResponse.json({ count: 0 });
   }
 }

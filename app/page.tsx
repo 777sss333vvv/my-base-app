@@ -228,13 +228,13 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
       const context = await sdk.context;
       if (context?.user) {
         setUser(context.user);
-// --- БЛОК АЛХИМИИ (УНИВЕРСАЛЬНЫЙ ПОИСК) ---
+// --- БЛОК АЛХИМИИ (ВОЗВРАТ РАБОЧЕЙ ЛОГИКИ) ---
         const u = context.user as any;
         
-        // Перебираем вообще все варианты, где Farcaster может прятать твой кошелек
+        // Ищем адрес в правильном порядке (Verified -> Connected -> Custody)
         const target = 
           u.verifiedAddresses?.ethAddresses?.[0] || 
-          u.verified_addresses?.eth_addresses?.[0] || 
+          u.verified_addresses?.eth_addresses?.[0] ||
           u.connectedAddress || 
           u.address || 
           u.custodyAddress;
@@ -247,7 +247,6 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
           })
             .then((res) => res.json())
             .then((data) => {
-              // Если пришел нормальный count — ставим его
               setTxCount(data.count ?? 0);
             })
             .catch(() => setTxCount(0));
