@@ -229,6 +229,18 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
       const context = await sdk.context;
       if (context?.user) {
         setUser(context.user);
+              const target = (context.user as any).custodyAddress || (context.user as any).address;
+        if (target && publicClient) {
+          try {
+            const count = await publicClient.getTransactionCount({ 
+              address: target as `0x${string}` 
+            });
+            setTxCount(count); // Обновляем Base Score ( nonce )
+          } catch (e) {
+            console.error("Wagmi score error:", e);
+            setTxCount(0); // Если сеть лагает, ставим 0 вместо 191
+          }
+        } 
         const bonusGiven = localStorage.getItem('oracle_bonus_added_v1');
         if (context.client.added && !bonusGiven) {
           setOracleScore(prev => {
@@ -417,9 +429,20 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center"><p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Base Score</p><p className="text-2xl font-mono font-black text-white">{txCount ?? "191"}</p></div>
-          <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center"><p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p><p className="text-2xl font-mono font-black text-[#FF00FF]">{oracleScore}</p></div>
-        </div>
+  {/* Base Score: теперь показывает реальный счетчик или точки при загрузке */}
+  <div className="bg-black/30 rounded-[1.5rem] py-4 border border-white/10 text-center">
+    <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Base Score</p>
+    <p className="text-2xl font-mono font-black text-white">
+      {txCount !== null ? txCount : "..."}
+    </p>
+  </div>
+
+  {/* Oracle Score: твои накопленные очки из localStorage */}
+  <div className="bg-black/30 rounded-[1.5rem] py-4 border border-[#FF00FF]/20 text-center">
+    <p className="text-[9px] uppercase opacity-50 mb-1 font-bold">Oracle Score</p>
+    <p className="text-2xl font-mono font-black text-[#FF00FF]">{oracleScore}</p>
+  </div>
+</div>
 
         {/* 1. Сначала Share (Рекаст) */}
         <button onClick={handleShare} className="w-full bg-white text-[#0052FF] font-black py-4 rounded-2xl text-xs mb-4 uppercase shadow-xl">
