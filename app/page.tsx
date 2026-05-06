@@ -229,27 +229,28 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
       if (context?.user) {
         setUser(context.user);
 // --- БЛОК ALCHEMY START ---
-        const user = context.user as { 
-          custodyAddress?: string; 
-          verifiedAddresses?: { ethAddresses?: string[] } 
-        };
-        
-        const targetAddress = user.verifiedAddresses?.ethAddresses?.[0] || user.custodyAddress;
+        const u = context.user as any;
+        // Проверяем все возможные пути к верифицированному адресу
+        const foundAddress = 
+          u.verifiedAddresses?.ethAddresses?.[0] || 
+          u.verified_addresses?.eth_addresses?.[0] ||
+          u.custodyAddress || 
+          u.address;
 
-        if (targetAddress) {
+        if (foundAddress) {
           const apiHost = typeof window !== 'undefined' ? window.location.origin : '';
           fetch(`${apiHost}/api/alchemy`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address: targetAddress }),
+            body: JSON.stringify({ address: foundAddress }),
           })
             .then((res) => res.json())
             .then((data: { count?: number }) => {
+              // Если Alchemy вернула 0, но мы знаем, что там 3к, 
+              // значит адрес все еще не тот.
               setTxCount(data.count ?? 0);
             })
-            .catch(() => {
-              setTxCount(0);
-            });
+            .catch(() => setTxCount(0));
         } else {
           setTxCount(0);
         }
