@@ -269,7 +269,7 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
       }
     };
     load();
-  }, [connectors, isConnected, connect, triggerBonus]);
+  }, [connectors, isConnected, connect, triggerBonus, getB1Signature]);
 
 
 

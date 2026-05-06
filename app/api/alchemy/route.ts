@@ -22,7 +22,8 @@ export async function POST(request: Request) {
     const count = data.result ? parseInt(data.result, 16) : 0;
     
     return NextResponse.json({ count });
-  } catch (err) {
+  } catch {
+    // Ошибка перехвачена без объявления неиспользуемой переменной
     return NextResponse.json({ count: 0 });
   }
 }
