@@ -228,31 +228,33 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
       const context = await sdk.context;
       if (context?.user) {
         setUser(context.user);
-// --- БЛОК ALCHEMY START ---
-        const user = context.user as any;
+// --- БЛОК АЛХИМИИ (УНИВЕРСАЛЬНЫЙ ПОИСК) ---
+        const u = context.user as any;
         
-        // Ищем адрес везде, где он может прятаться в SDK
+        // Перебираем вообще все варианты, где Farcaster может прятать твой кошелек
         const target = 
-          user.verifiedAddresses?.ethAddresses?.[0] || 
-          user.connectedAddress || 
-          user.custodyAddress;
+          u.verifiedAddresses?.ethAddresses?.[0] || 
+          u.verified_addresses?.eth_addresses?.[0] || 
+          u.connectedAddress || 
+          u.address || 
+          u.custodyAddress;
 
         if (target) {
-          const apiHost = typeof window !== 'undefined' ? window.location.origin : '';
-          fetch(`${apiHost}/api/alchemy`, {
+          fetch('/api/alchemy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ address: target }),
           })
             .then((res) => res.json())
-            .then((data: { count?: number }) => {
+            .then((data) => {
+              // Если пришел нормальный count — ставим его
               setTxCount(data.count ?? 0);
             })
             .catch(() => setTxCount(0));
         } else {
           setTxCount(0);
         }
-        // --- БЛОК ALCHEMY END ---
+        // --- КОНЕЦ БЛОКА АЛХИМИИ ---
         const bonusGiven = localStorage.getItem('oracle_bonus_added_v1');
         if (context.client.added && !bonusGiven) {
           setOracleScore(prev => {
