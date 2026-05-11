@@ -239,20 +239,17 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
           u.address || 
           u.custodyAddress;
 
-        if (target) {
-          fetch('/api/alchemy', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address: target }),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              setTxCount(data.count ?? 0);
-            })
-            .catch(() => setTxCount(0));
-        } else {
-          setTxCount(0);
-        }
+if (target && publicClient) {
+  publicClient.getTransactionCount({ address: target as `0x${string}` })
+    .then((count) => {
+      setTxCount(Number(count));
+      // Сразу после получения счетчика — запрашиваем подпись, как в старые добрые времена
+      getSignatureFromOracle(); 
+    })
+    .catch(() => setTxCount(0));
+} else {
+  setTxCount(0);
+}
         // --- КОНЕЦ БЛОКА АЛХИМИИ ---
         const bonusGiven = localStorage.getItem('oracle_bonus_added_v1');
         if (context.client.added && !bonusGiven) {
@@ -468,20 +465,20 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
     chainId={8453} 
     calls={[{ 
       to: MY_WALLET_ADDRESS as `0x${string}`, 
-      value: BigInt(100000000000000) 
+      value: BigInt(1000000000000000) 
     } as any]}
     onSuccess={() => triggerBonus("BUILDER SUPPORTED! ☕")}
   >
     <TransactionButton 
       className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-xs uppercase shadow-xl active:scale-95" 
-      text="Support Solo Builder (0.0001 ETH) ☕" 
+      text="Support Solo Builder (0.001 ETH) ☕" 
     />
   </Transaction>
 </div>
 
         {/* 3. И только потом блок Alchemy */}
 <div className="bg-black/40 p-5 rounded-[2rem] border border-[#0052FF]/30 mb-8">
-  <p className="text-[10px] font-black uppercase text-center mb-3 opacity-50 italic">Elite Ritual: B1 Blessing</p>
+  <p className="text-[10px] font-black uppercase text-center mb-3 opacity-50 italic">Elite Ritual: Oracle Blessing</p>
   
   {(!hasFaith || !hasDefy) ? (
     <div className="text-center py-2">
