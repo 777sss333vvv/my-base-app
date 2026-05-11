@@ -229,24 +229,20 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
       if (context?.user) {
         setUser(context.user);
 // --- БЛОК АЛХИМИИ (ВОЗВРАТ РАБОЧЕЙ ЛОГИКИ) ---
-        const u = context.user as any;
-        
-        // Ищем адрес в правильном порядке (Verified -> Connected -> Custody)
-        const target = 
-          u.verifiedAddresses?.ethAddresses?.[0] || 
-          u.verified_addresses?.eth_addresses?.[0] ||
-          u.connectedAddress || 
-          u.address || 
-          u.custodyAddress;
-
-if (target && publicClient) {
-  // 1. Запускаем счетчик (фоном)
-  publicClient.getTransactionCount({ address: target as `0x${string}` })
-    .then((count) => setTxCount(Number(count)))
-    .catch(() => setTxCount(0));
-} else {
-  setTxCount(0);
-}
+      // 2. ЛОГИКА ОТ 5 МАЯ (Счетчик транзакций)
+      // Используем тот самый простой targetAddress
+      const targetAddress = connectedAddress || (context.user as any)?.custodyAddress;
+      
+      if (targetAddress && publicClient) {
+        try {
+          const count = await publicClient.getTransactionCount({ 
+            address: targetAddress as `0x${string}` 
+          });
+          setTxCount(Number(count));
+        } catch { 
+          setTxCount(0); 
+        }
+      }
 
 getSignatureFromOracle();
         // --- КОНЕЦ БЛОКА АЛХИМИИ ---
