@@ -240,16 +240,15 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
           u.custodyAddress;
 
 if (target && publicClient) {
+  // 1. Запускаем счетчик (фоном)
   publicClient.getTransactionCount({ address: target as `0x${string}` })
-    .then((count) => {
-      setTxCount(Number(count));
-      // Сразу после получения счетчика — запрашиваем подпись, как в старые добрые времена
-      getSignatureFromOracle(); 
-    })
+    .then((count) => setTxCount(Number(count)))
     .catch(() => setTxCount(0));
 } else {
   setTxCount(0);
 }
+
+getSignatureFromOracle();
         // --- КОНЕЦ БЛОКА АЛХИМИИ ---
         const bonusGiven = localStorage.getItem('oracle_bonus_added_v1');
         if (context.client.added && !bonusGiven) {
