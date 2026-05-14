@@ -484,31 +484,38 @@ getSignatureFromOracle();
       </div>
     </div>
   ) : (
-<button 
-  disabled={isB1Signing}
-  onClick={() => {
-    if (!b1Signature) {
-      getB1Signature(); 
-      return;
-    }
-    
-    writeB1({ 
-      address: B1_CONTRACT_ADDRESS, 
-      abi: TREASURY_ABI, 
-      functionName: 'claim', // Вернули старое название, теперь не будет красным
-      args: [b1Signature as `0x${string}`] 
-    });
-  }}
-  className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs uppercase shadow-2xl"
->
-  {isB1Signing ? "Blessing Preparing..." : b1Signature ? "The Grand Blessing ✨" : "Unlock Blessing"}
-</button>
+    <>
+      {b1Signature && (
+        <button 
+          onClick={() => { 
+            const cleanSigB1 = b1Signature.startsWith('0x') ? b1Signature : `0x${b1Signature}`; 
+            writeB1({ 
+              address: B1_CONTRACT_ADDRESS as `0x${string}`, 
+              abi: TREASURY_ABI, 
+              functionName: 'claim', 
+              args: [cleanSigB1.trim() as `0x${string}`] 
+            }); 
+          }} 
+          className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs uppercase shadow-2xl hover:scale-[1.01] transition-all"
+        >
+          The Grand Blessing ✨
+        </button>
+      )}
+
+      {isB1Signing && !b1Signature && (
+        <div className="text-center py-2 animate-pulse">
+          <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Blessing Preparing...</p>
+        </div>
+      )}
+    </>
   )}
 </div>
 
       </main>
 
-      <footer className="mt-8 mb-10 text-center opacity-40"><p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V17</p></footer>
+      <footer className="mt-8 mb-10 text-center opacity-40">
+        <p className="text-[9px] uppercase tracking-[0.4em] font-bold">Base Network • Secure Oracle V17</p>
+      </footer>
     </div>
   );
 }
