@@ -11,7 +11,7 @@ import { useAccount, useConnect, usePublicClient, useWriteContract } from 'wagmi
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
 const TREASURY_ADDRESS = '0xc70f7D0DFE687AD9e5e2fcdd1FAF0d5B175b81f9'; 
-const B1_CONTRACT_ADDRESS = '0xbdE06D8E8CC882DDe3f953e8e5a673f7aD4f75e1';
+const B1_CONTRACT_ADDRESS = '0x81c74b0749F528f322CCb8C0539a3F5e0196D154';
 const TOKEN_IMAGE = "/oracle.png"; 
 
 const TREASURY_ABI = [
@@ -484,21 +484,25 @@ getSignatureFromOracle();
       </div>
     </div>
   ) : (
-    <button 
-      disabled={!b1Signature || isB1Signing}
-      onClick={() => {
-        if (!b1Signature) return getB1Signature(); // Если подпись еще не пришла
-        writeB1({ 
-          address: '0xbdE06D8E8CC882DDe3f953e8e5a673f7aD4f75e1', // ВСТАВЬ АДРЕС B1 ТУТ
-          abi: TREASURY_ABI, 
-          functionName: 'claim', 
-          args: [b1Signature as `0x${string}`] 
-        });
-      }}
-      className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs uppercase shadow-2xl animate-pulse"
-    >
-      {isB1Signing ? "Blessing Preparing..." : b1Signature ? "The Grand Blessing ✨" : "Unlock Blessing"}
-    </button>
+<button 
+  disabled={isB1Signing}
+  onClick={() => {
+    if (!b1Signature) {
+      getB1Signature(); 
+      return;
+    }
+    
+    writeB1({ 
+      address: B1_CONTRACT_ADDRESS, 
+      abi: TREASURY_ABI, 
+      functionName: 'claim', // Вернули старое название, теперь не будет красным
+      args: [b1Signature as `0x${string}`] 
+    });
+  }}
+  className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs uppercase shadow-2xl"
+>
+  {isB1Signing ? "Blessing Preparing..." : b1Signature ? "The Grand Blessing ✨" : "Unlock Blessing"}
+</button>
   )}
 </div>
 
