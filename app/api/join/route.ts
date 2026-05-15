@@ -1,7 +1,27 @@
 import { NextResponse } from 'next/server';
 import { ethers } from 'ethers';
+import { createPublicClient, http } from 'viem';
+import { base } from 'viem/chains';
 
-// Кэш для анти-спама
+// Клиент для проверки времени прямо в блокчейне Base
+const publicClient = createPublicClient({ 
+  chain: base,
+  transport: http()
+});
+
+// СТРОГИЕ ПАРАМЕТРЫ B3
+const B3_CONTRACT_ADDRESS = '0x81c74b0749F528f322CCb8C0539a3F5e0196D154';
+const B3_ABI = [
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "lastClaimTime",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
+
+// Лимит по IP (анти-спам)
 const ipCache = new Map<string, number>();
 
 export async function POST(req: Request) {
@@ -10,34 +30,42 @@ export async function POST(req: Request) {
     const ip = req.headers.get('x-forwarded-for') || 'anonymous';
     const now = Math.floor(Date.now() / 1000);
 
-    // 1. АНТИ-СПАМ: 60 секунд между запросами
+    // 1. Защита от спама (30 секунд)
     const lastIpRequest = ipCache.get(ip) || 0;
-    if (now - lastIpRequest < 60) {
-      return NextResponse.json({ error: 'Oracle is gathering energy...' }, { status: 429 });
+    if (now - lastIpRequest < 30) {
+      return NextResponse.json({ error: 'Oracle is thinking...' }, { status: 429 });
     }
     ipCache.set(ip, now);
 
-    // --- ПРОВЕРКА V17 ПОЛНОСТЬЮ УДАЛЕНА ---
-    // Теперь Сингер не проверяет lastClaimTime. 
-    // Логика "Face + DeFi" теперь обрабатывается на фронтенде перед вызовом этого роутера.
+    // 2. Проверка 12 часов в контракте B3 (защита ключа 0xd9eC95...)
+    const lastClaim = await publicClient.readContract({
+      address: B3_CONTRACT_ADDRESS,
+      abi: B3_ABI,
+      functionName: 'lastClaimTime',
+      args: [userAddress as `0x${string}`],
+    }) as bigint;
 
-    // 2. ГЕНЕРАЦИЯ ПОДПИСИ (АККАУНТ #2: 0xd9eC95...)
-    const pKey = process.env.ORACLE_PRIVATE_KEY_B1; 
-    if (!pKey) return NextResponse.json({ error: 'B1 Signer not configured' }, { status: 500 });
+    if (now - Number(lastClaim) < 43200) { 
+      return NextResponse.json({ error: 'Wait 12h' }, { status: 403 });
+    }
+
+    // 3. Генерация подписи (СИНГЕР: 0xd9eC951845FF2E0a93811d932f435Ba790768aF1)
+    const pKey = process.env.ORACLE_BLESSING_KEY; 
+    if (!pKey) return NextResponse.json({ error: 'Config error' }, { status: 500 });
 
     const wallet = new ethers.Wallet(pKey);
     const cleanAddress = userAddress.toLowerCase();
     
-    // Хэш: keccak256(abi.encodePacked(userAddress))
+    // Хэшируем точно как в контракте: keccak256(abi.encodePacked(msg.sender))
     const messageHash = ethers.utils.keccak256(cleanAddress);
     
-    // Подпись сообщения
+    // Подпись (SINGER 0xd9eC95...)
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
 
   } catch (e) {
-    console.error('B2 Sign error:', e);
-    return NextResponse.json({ error: 'Oracle B2 failed' }, { status: 500 });
+    console.error('B3 Sign error:', e);
+    return NextResponse.json({ error: 'Sign failed' }, { status: 500 });
   }
 }
