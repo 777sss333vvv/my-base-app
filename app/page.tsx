@@ -153,12 +153,6 @@ const getB1Signature = async () => {
   }
 };
 
-useEffect(() => {
-  // Запускаем, как только появился пользователь или адрес кошелька
-  if ((user || connectedAddress) && !b1Signature && !isB1Signing) {
-    getB1Signature();
-  }
-}, [user, connectedAddress, b1Signature, isB1Signing]);
 
 const prophecies = useMemo(() => [
     "You've found the hidden pulse. The Oracle rewards your curiosity. 🧠⚡",
@@ -254,6 +248,7 @@ if (choice === 'defy') setHasDefy(true);   // ЗАПИСЫВАЕМ НАЖАТИ�
       }
 
 getSignatureFromOracle();
+getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
         // --- КОНЕЦ БЛОКА АЛХИМИИ ---
         const bonusGiven = localStorage.getItem('oracle_bonus_added_v1');
         if (context.client.added && !bonusGiven) {
