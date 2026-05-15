@@ -53,13 +53,13 @@ export async function POST(req: Request) {
     const pKey = process.env.ORACLE_BLESSING_KEY; 
     if (!pKey) return NextResponse.json({ error: 'Config error' }, { status: 500 });
 
-    const wallet = new ethers.Wallet(pKey);
-    const cleanAddress = userAddress.toLowerCase();
+const wallet = new ethers.Wallet(pKey);
+
+    // ВАЖНО: solidityKeccak256 упаковывает адрес как 20-байтовое значение, а не как строку.
+    // Это единственный способ получить хэш, идентичный abi.encodePacked(msg.sender) в Solidity.
+    const messageHash = ethers.utils.solidityKeccak256(['address'], [userAddress]);
     
-    // Хэшируем точно как в контракте: keccak256(abi.encodePacked(msg.sender))
-    const messageHash = ethers.utils.keccak256(cleanAddress);
-    
-    // Подпись (SINGER 0xd9eC95...)
+    // Подписываем массив байтов (arrayify), чтобы подпись была валидна для ecrecover
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
