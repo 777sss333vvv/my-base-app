@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     }
     ipCache.set(ip, now);
 
-    // 2. Проверка 12 часов (защита приватного ключа)
+// 2. Проверка 12 часов (защита приватного ключа)
     const lastClaim = await publicClient.readContract({
       address: TREASURY_ADDRESS,
       abi: TREASURY_ABI,
@@ -45,7 +45,11 @@ export async function POST(req: Request) {
       args: [userAddress as `0x${string}`],
     }) as bigint;
 
-    if (now - Number(lastClaim) < 43200) { // 12 часов в секундах
+    const lastClaimTime = Number(lastClaim);
+
+    // Если 0 — значит еще не клеймил, пропускаем. 
+    // Если больше 0 — проверяем, прошло ли 12 часов.
+    if (lastClaimTime > 0 && (now - lastClaimTime < 43200)) { 
       return NextResponse.json({ error: 'Wait 12h' }, { status: 403 });
     }
 
