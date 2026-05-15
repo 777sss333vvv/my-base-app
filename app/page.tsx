@@ -128,28 +128,37 @@ const [isB1Signing, setIsB1Signing] = useState(false);
     }
   };
 
-  const getB1Signature = async () => {
+const getB1Signature = async () => {
   const targetAddress = connectedAddress || user?.custodyAddress;
-  if (!targetAddress || !hasFaith || !hasDefy) return;
+  if (!targetAddress) return; // Теперь запрашиваем сразу, как только есть адрес
   
   setIsB1Signing(true);
   try {
-    const response = await fetch('/api/join', { // Путь твоего бывшего снапа
+    const response = await fetch('/api/join', { 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userAddress: targetAddress }),
     });
     const data = await response.json();
-    if (data.signature) setB1Signature(data.signature);
-  } catch (err) { console.error("B1 Sign error"); }
-  finally { setIsB1Signing(false); }
+    // Если подпись есть — ставим, если нет (например, Wait 12h) — выключаем загрузку
+    if (data.signature) {
+      setB1Signature(data.signature);
+    } else {
+      console.log("B3 Check:", data.error || "Pending");
+    }
+  } catch (err) { 
+    console.error("B1 Sign error"); 
+  } finally { 
+    setIsB1Signing(false); 
+  }
 };
 
 useEffect(() => {
-  if (hasFaith && hasDefy && !b1Signature && !isB1Signing) {
+  // Запускаем, как только появился пользователь или адрес кошелька
+  if ((user || connectedAddress) && !b1Signature && !isB1Signing) {
     getB1Signature();
   }
-}, [hasFaith, hasDefy, b1Signature, isB1Signing]);
+}, [user, connectedAddress, b1Signature, isB1Signing]);
 
 const prophecies = useMemo(() => [
     "You've found the hidden pulse. The Oracle rewards your curiosity. 🧠⚡",
