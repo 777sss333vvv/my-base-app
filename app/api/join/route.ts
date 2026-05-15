@@ -9,9 +9,9 @@ const publicClient = createPublicClient({
   transport: http()
 });
 
-// СТРОГИЕ ПАРАМЕТРЫ B3
-const B3_CONTRACT_ADDRESS = '0x81c74b0749F528f322CCb8C0539a3F5e0196D154';
-const B3_ABI = [
+// ПАРАМЕТРЫ B3 (Зеркально V17)
+const TREASURY_ADDRESS = '0x81c74b0749F528f322CCb8C0539a3F5e0196D154';
+const TREASURY_ABI = [
   {
     "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "name": "lastClaimTime",
@@ -21,7 +21,7 @@ const B3_ABI = [
   }
 ] as const;
 
-// Лимит по IP (анти-спам)
+// Лимит по IP (в памяти сервера)
 const ipCache = new Map<string, number>();
 
 export async function POST(req: Request) {
@@ -30,42 +30,41 @@ export async function POST(req: Request) {
     const ip = req.headers.get('x-forwarded-for') || 'anonymous';
     const now = Math.floor(Date.now() / 1000);
 
-    // 1. Защита от спама (30 секунд)
+    // 1. Защита от спама (Rate Limit по IP - 30 секунд)
     const lastIpRequest = ipCache.get(ip) || 0;
     if (now - lastIpRequest < 30) {
       return NextResponse.json({ error: 'Oracle is thinking...' }, { status: 429 });
     }
     ipCache.set(ip, now);
 
-    // 2. Проверка 12 часов в контракте B3 (защита ключа 0xd9eC95...)
+    // 2. Проверка 12 часов (защита приватного ключа)
     const lastClaim = await publicClient.readContract({
-      address: B3_CONTRACT_ADDRESS,
-      abi: B3_ABI,
+      address: TREASURY_ADDRESS,
+      abi: TREASURY_ABI,
       functionName: 'lastClaimTime',
       args: [userAddress as `0x${string}`],
     }) as bigint;
 
-    if (now - Number(lastClaim) < 43200) { 
+    if (now - Number(lastClaim) < 43200) { // 12 часов в секундах
       return NextResponse.json({ error: 'Wait 12h' }, { status: 403 });
     }
 
-    // 3. Генерация подписи (СИНГЕР: 0xd9eC951845FF2E0a93811d932f435Ba790768aF1)
-    const pKey = process.env.ORACLE_BLESSING_KEY; 
+    // 3. Генерация подписи
+    const pKey = process.env.ORACLE_BLESSING_KEY; // Твой ключ для B3
     if (!pKey) return NextResponse.json({ error: 'Config error' }, { status: 500 });
 
-const wallet = new ethers.Wallet(pKey);
-
-    // ВАЖНО: solidityKeccak256 упаковывает адрес как 20-байтовое значение, а не как строку.
-    // Это единственный способ получить хэш, идентичный abi.encodePacked(msg.sender) в Solidity.
-    const messageHash = ethers.utils.solidityKeccak256(['address'], [userAddress]);
+    const wallet = new ethers.Wallet(pKey);
+    const cleanAddress = userAddress.toLowerCase();
     
-    // Подписываем массив байтов (arrayify), чтобы подпись была валидна для ecrecover
+    // Хэшируем точно как в V17: keccak256(адрес)
+    const messageHash = ethers.utils.keccak256(cleanAddress);
+    
+    // Подписываем (добавляет префикс Ethereum Signed Message)
     const signature = await wallet.signMessage(ethers.utils.arrayify(messageHash));
 
     return NextResponse.json({ signature });
-
-  } catch (e) {
-    console.error('B3 Sign error:', e);
+} catch (error) {
+    console.error("B3 Router Error:", error);
     return NextResponse.json({ error: 'Sign failed' }, { status: 500 });
   }
 }
