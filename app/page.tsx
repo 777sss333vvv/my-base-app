@@ -489,7 +489,7 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
     </div>
   ) : (
     <>
-      {b1Signature && (
+      {b1Signature ? (
         <button 
           onClick={() => { 
             const cleanSigB1 = b1Signature.startsWith('0x') ? b1Signature : `0x${b1Signature}`; 
@@ -504,11 +504,12 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
         >
           The Grand Blessing ✨
         </button>
-      )}
-
-      {isB1Signing && !b1Signature && (
-        <div className="text-center py-2 animate-pulse">
-          <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Blessing Preparing...</p>
+      ) : (
+        <div className="text-center py-2">
+          <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest animate-pulse">
+            {/* Если загрузка — Preparing, если нет подписи — сразу пишем Wait 12h */}
+            {isB1Signing ? "Blessing Preparing..." : "Wait 12h"}
+          </p>
         </div>
       )}
     </>
