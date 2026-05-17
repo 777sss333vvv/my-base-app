@@ -30,24 +30,29 @@ export async function POST(req: Request) {
     const ip = req.headers.get('x-forwarded-for') || 'anonymous';
     const now = Math.floor(Date.now() / 1000);
 
-    // 1. Защита от спама (Rate Limit по IP - 30 секунд)
+    // 1. Мягкая защита от спама (снизили до 2 секунд, чтобы не душить фронтенд при рендерах)
     const lastIpRequest = ipCache.get(ip) || 0;
-    if (now - lastIpRequest < 30) {
-      return NextResponse.json({ error: 'Oracle is thinking...' }, { status: 429 });
+    if (now - lastIpRequest < 2) {
+      return NextResponse.json({ error: 'Rate limit' }, { status: 429 });
     }
     ipCache.set(ip, now);
 
-// 2. Проверка 24 часов (синхронизировано со смарт-контрактом B3)
-    const lastClaim = await publicClient.readContract({
-      address: TREASURY_ADDRESS,
-      abi: TREASURY_ABI,
-      functionName: 'lastClaimTime',
-      args: [userAddress as `0x${string}`],
-    }) as bigint;
+    // 2. Безопасная проверка времени (синхронизировано со смарт-контрактом B3 на 24 часа)
+    let lastClaimTime = 0;
+    try {
+      const lastClaim = await publicClient.readContract({
+        address: TREASURY_ADDRESS,
+        abi: TREASURY_ABI,
+        functionName: 'lastClaimTime',
+        args: [userAddress as `0x${string}`],
+      }) as bigint;
+      lastClaimTime = Number(lastClaim);
+    } catch (rpcError) {
+      console.error("RPC Read Error, bypassing time-lock check:", rpcError);
+      // Если RPC на секунду заглючит — не падаем в catch, даем контракту самому проверить время при транзакции
+    }
 
-    const lastClaimTime = Number(lastClaim);
-
-    // Если 0 — пропускаем. Если больше 0 — проверяем, прошло ли 24 часа (86400 секунд)
+    // Если больше 0 — проверяем, прошло ли 24 часа (86400 секунд)
     if (lastClaimTime > 0 && (now - lastClaimTime < 86400)) { 
       return NextResponse.json({ error: 'Wait 24h' }, { status: 403 });
     }
