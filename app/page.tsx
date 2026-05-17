@@ -485,6 +485,8 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
       <div className="flex justify-center gap-2 mt-2">
         <div className={`w-2 h-2 rounded-full ${hasFaith ? 'bg-green-500 shadow-[0_0_8px_#4ade80]' : 'bg-white/20'}`} />
         <div className={`w-2 h-2 rounded-full ${hasDefy ? 'bg-green-500 shadow-[0_0_8px_#4ade80]' : 'bg-white/20'}`} />
+        {/* Третья точка в заблокированном состоянии просто серая */}
+        <div className="w-2 h-2 rounded-full bg-white/20" />
       </div>
     </div>
   ) : (
@@ -506,10 +508,16 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
         </button>
       ) : (
         <div className="text-center py-2">
-          <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest animate-pulse">
-            {/* Если загрузка — Preparing, если нет подписи — сразу пишем Wait 12h */}
-            {isB1Signing ? "Blessing Preparing..." : "Wait 12h"}
+          <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest animate-pulse mb-2">
+            {isB1Signing ? "Blessing Preparing..." : "Wait 24h"}
           </p>
+          {/* Блок индикаторов, когда ритуалы пройдены, но мы ждем подпись или время */}
+          <div className="flex justify-center gap-2 mt-2">
+            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#4ade80]" />
+            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#4ade80]" />
+            {/* Твоя третья точка: горит зеленым, если подпись прилетела, и красным, если роутер её не дал */}
+            <div className={`w-2 h-2 rounded-full ${b1Signature ? 'bg-green-500 shadow-[0_0_8px_#4ade80]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`} />
+          </div>
         </div>
       )}
     </>

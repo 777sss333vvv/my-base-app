@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     }
     ipCache.set(ip, now);
 
-// 2. Проверка 12 часов (защита приватного ключа)
+// 2. Проверка 24 часов (синхронизировано со смарт-контрактом B3)
     const lastClaim = await publicClient.readContract({
       address: TREASURY_ADDRESS,
       abi: TREASURY_ABI,
@@ -47,10 +47,9 @@ export async function POST(req: Request) {
 
     const lastClaimTime = Number(lastClaim);
 
-    // Если 0 — значит еще не клеймил, пропускаем. 
-    // Если больше 0 — проверяем, прошло ли 12 часов.
-    if (lastClaimTime > 0 && (now - lastClaimTime < 43200)) { 
-      return NextResponse.json({ error: 'Wait 12h' }, { status: 403 });
+    // Если 0 — пропускаем. Если больше 0 — проверяем, прошло ли 24 часа (86400 секунд)
+    if (lastClaimTime > 0 && (now - lastClaimTime < 86400)) { 
+      return NextResponse.json({ error: 'Wait 24h' }, { status: 403 });
     }
 
     // 3. Генерация подписи
