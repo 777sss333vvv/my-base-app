@@ -475,54 +475,93 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
   </Transaction>
 </div>
 
-        {/* 3. И только потом блок Alchemy */}
-<div className="bg-black/40 p-5 rounded-[2rem] border border-[#0052FF]/30 mb-8">
-  <p className="text-[10px] font-black uppercase text-center mb-3 opacity-50 italic">Elite Ritual: Oracle Blessing</p>
-  
-  {(!hasFaith || !hasDefy) ? (
-    <div className="text-center py-2">
-      <p className="text-[10px] font-bold text-blue-300 uppercase">Complete Faith & Defy to unlock</p>
-      <div className="flex justify-center gap-2 mt-2">
-        <div className={`w-2 h-2 rounded-full ${hasFaith ? 'bg-green-500 shadow-[0_0_8px_#4ade80]' : 'bg-white/20'}`} />
-        <div className={`w-2 h-2 rounded-full ${hasDefy ? 'bg-green-500 shadow-[0_0_8px_#4ade80]' : 'bg-white/20'}`} />
-        {/* Третья точка в заблокированном состоянии просто серая */}
-        <div className="w-2 h-2 rounded-full bg-white/20" />
-      </div>
-    </div>
-  ) : (
-    <>
-      {b1Signature ? (
-        <button 
-          onClick={() => { 
-            const cleanSigB1 = b1Signature.startsWith('0x') ? b1Signature : `0x${b1Signature}`; 
-            writeB1({ 
-              address: B1_CONTRACT_ADDRESS as `0x${string}`, 
-              abi: TREASURY_ABI, 
-              functionName: 'claim', 
-              args: [cleanSigB1.trim() as `0x${string}`] 
-            }); 
-          }} 
-          className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs uppercase shadow-2xl hover:scale-[1.01] transition-all"
-        >
-          The Grand Blessing ✨
-        </button>
-      ) : (
-        <div className="text-center py-2">
-          <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest animate-pulse mb-2">
-            {isB1Signing ? "Blessing Preparing..." : "Wait 24h"}
-          </p>
-          {/* Блок индикаторов, когда ритуалы пройдены, но мы ждем подпись или время */}
-          <div className="flex justify-center gap-2 mt-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#4ade80]" />
-            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#4ade80]" />
-            {/* Твоя третья точка: горит зеленым, если подпись прилетела, и красным, если роутер её не дал */}
-            <div className={`w-2 h-2 rounded-full ${b1Signature ? 'bg-green-500 shadow-[0_0_8px_#4ade80]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`} />
-          </div>
+
+{/* 3. И только потом блок Alchemy */}
+        <div className="bg-black/40 p-5 rounded-[2rem] border border-[#0052FF]/30 mb-8">
+          <p className="text-[10px] font-black uppercase text-center mb-3 opacity-50 italic">Elite Ritual: Oracle Blessing</p>
+          
+          {(!hasFaith || !hasDefy) ? (
+            <div className="text-center py-2">
+              <p className="text-[10px] font-bold text-blue-300 uppercase">Complete Faith & Defy to unlock</p>
+              <div className="flex justify-center gap-2 mt-2">
+                <div className={`w-2 h-2 rounded-full ${hasFaith ? 'bg-green-500 shadow-[0_0_8px_#4ade80]' : 'bg-white/20'}`} />
+                <div className={`w-2 h-2 rounded-full ${hasDefy ? 'bg-green-500 shadow-[0_0_8px_#4ade80]' : 'bg-white/20'}`} />
+                {/* Третья точка в заблокированном состоянии просто серая */}
+                <div className="w-2 h-2 rounded-full bg-white/20" />
+              </div>
+            </div>
+          ) : (
+            <>
+              {(() => {
+                // СОСТОЯНИЕ 1: Транзакция отправлена, ждем блокчейн (USERBOX SENDING...)
+                if (b1Hash) {
+                  if (!sessionStorage.getItem(`grand_viewed_${b1Hash}`)) {
+                    sessionStorage.setItem(`grand_viewed_${b1Hash}`, 'true');
+                    
+                    // Вызов твоего родного окна сверху вниз
+                    triggerBonus("+100,000 $USERBOX ✨");
+                    
+                    const interval = setInterval(() => { 
+                      if (fetchContractData) fetchContractData(); 
+                    }, 3000);
+                    setTimeout(() => clearInterval(interval), 20000);
+                  }
+
+                  return (
+                    <div className="text-center">
+                      <button disabled className="w-full bg-blue-900/40 border-2 border-blue-500/30 text-white font-black py-4 rounded-xl text-xs uppercase flex items-center justify-center gap-3">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                        </span>
+                        <span className="animate-pulse">USERBOX SENDING...</span>
+                      </button>
+                      <div className="flex justify-center gap-2 mt-4">
+                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#4ade80]" />
+                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#4ade80]" />
+                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#4ade80]" />
+                      </div>
+                    </div>
+                  );
+                }
+
+                // СОСТОЯНИЕ 2: Подпись от бэка есть, кнопка активна и готова к клику
+                if (b1Signature) {
+                  return (
+                    <button 
+                      onClick={() => { 
+                        const cleanSigB1 = b1Signature.startsWith('0x') ? b1Signature : `0x${b1Signature}`; 
+                        writeB1({ 
+                          address: B1_CONTRACT_ADDRESS as `0x${string}`, 
+                          abi: TREASURY_ABI, 
+                          functionName: 'claim', 
+                          args: [cleanSigB1.trim() as `0x${string}`] 
+                        }); 
+                      }} 
+                      className="w-full bg-white text-[#0052FF] font-black py-4 rounded-xl text-xs uppercase shadow-2xl hover:scale-[1.01] transition-all"
+                    >
+                      The Grand Blessing ✨
+                    </button>
+                  );
+                }
+
+                // СОСТОЯНИЕ 3: Кулдаун (Wait 24h), подписи нет, транзакции нет
+                return (
+                  <div className="text-center py-2">
+                    <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest animate-pulse mb-2">
+                      {isB1Signing ? "Blessing Preparing..." : "Wait 24h"}
+                    </p>
+                    <div className="flex justify-center gap-2 mt-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#4ade80]" />
+                      <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#4ade80]" />
+                      <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]" />
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
+          )}
         </div>
-      )}
-    </>
-  )}
-</div>
 
       </main>
 
