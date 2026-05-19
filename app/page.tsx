@@ -41,16 +41,16 @@ const [isB1Signing, setIsB1Signing] = useState(false);
 
   const [oracleMessage, setOracleMessage] = useState(() => {
   const initialProphecies = [
-    "Farcaster algorithms crave action. Your $USERBOX is the key to the system. 🔑🔮",
-    "Enough with empty promises. The Oracle rewards those who act here and now. 🏺💎",
-    "Every prophecy requires energy. Feed 5k $USERBOX into the cycle. ⚙️🔥",
-    "You are a validator of fate. The algorithm tracks your every transaction. 👁️⚡",
-    "Base rank doesn't grow on words. Only token movement clears the path. 🛡️🌌",
-    "The Oracle is purged of noise. Only math and your intuition remain. 📐🔮",
-    "In a world of 'tomorrow', we choose results today. Claim yours. 🏺🌟",
-    "Your recast is an echo in the code. Your fuel is $USERBOX. 🚀💙",
-    "The system logs every move. Make it count with $USERBOX tokens. 🏛️✨",
-    "Oracle energy is no longer free, for it has real value. Enter the loop. 🛡️💎"
+"The pool is limited and the clock is ticking. Will you claim the blessing first? ⏱️🔮",
+    "Support a solo builder. No big corporate teams—just pure code and real rewards. 🛠️🛡️",
+    "Holding our NFT? The Oracle marks you as a true believer. The matrix expands. 🏺✨",
+    "Unlock the ultimate Grand Blessing. Complete both loops to reveal the path. 🔑💎",
+    "Don't just watch the app grow. Support the ecosystem and hunt for the big bounty. 🏛️🌟",
+    "First come, first served. The treasury rewards the fastest souls today. 🎮🔥",
+    "Every NFT holder forms the foundation of the Temple. Loyalty has its rewards. 🛡️🌌",
+    "Built single-handedly, shared with the community. Join the daily ritual. 🚀💙",
+    "The Oracle rewards speed and action. Is there still gold left in the contract? 🏺👁️",
+    "Balance the scales with Faith and Defy. Complete the cycle and test your luck. 📐✨"
   ];
   return initialProphecies[Math.floor(Math.random() * initialProphecies.length)];
 });
