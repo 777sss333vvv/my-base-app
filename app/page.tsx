@@ -332,13 +332,33 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
     </div>
 )}
 
-  <button 
-    onClick={getNewProphecy} 
-    className="absolute -left-8 top-1/2 -translate-y-1/2 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-all z-20 overflow-hidden" 
-    style={{ width: '4.8rem', height: '4.8rem' }}
-  >
-    <img src={TOKEN_IMAGE} className="w-full h-full object-cover rounded-full" alt="Oracle" />
-  </button>
+{/* ==================== ВСТАВЛЯЕМ СЮДА ВМЕСТО СТАРОЙ КНОПКИ ==================== */}
+          <div className="absolute -left-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 z-20">
+            
+            {/* НОВАЯ КНОПКА ОГНЯ (ВИЗУАЛЬНЫЙ ТЕСТ) */}
+            <button 
+              type="button"
+              className="bg-transparent rounded-full border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-all overflow-hidden relative" 
+              style={{ width: '4.8rem', height: '4.8rem' }}
+            >
+              <img src="/burn.png" className="w-full h-full object-cover rounded-full" alt="Burn 100k" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 font-black text-white text-[9px]">
+                <span>🔥</span>
+                <span>100K</span>
+              </div>
+            </button>
+
+            {/* ТВОЯ ОРИГИНАЛЬНАЯ ГОЛОВА ОРАКУЛА (ПЕРЕНЕСЕНА СЮДА БЕЗ ИЗМЕНЕНИЙ СВОИХ ФУНКЦИЙ) */}
+            <button 
+              onClick={getNewProphecy} 
+              className="bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-all overflow-hidden" 
+              style={{ width: '4.8rem', height: '4.8rem' }}
+            >
+              <img src={TOKEN_IMAGE} className="w-full h-full object-cover rounded-full" alt="Oracle" />
+            </button>
+
+          </div>
+          {/* ============================================================================= */}
   
   <p className="text-sm italic font-medium pl-12 pr-2 text-center">&quot;{oracleMessage}&quot;</p>
 </div>
@@ -464,13 +484,13 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
     chainId={8453} 
     calls={[{ 
       to: MY_WALLET_ADDRESS as `0x${string}`, 
-      value: BigInt(1000000000000000) 
+      value: BigInt(100000000000000) 
     } as any]}
     onSuccess={() => triggerBonus("BUILDER SUPPORTED! ☕")}
   >
     <TransactionButton 
       className="w-full bg-white !text-[#0052FF] font-black py-4 rounded-2xl text-xs uppercase shadow-xl active:scale-95" 
-      text="Support Solo Builder (0.001 ETH) ☕" 
+      text="Support Solo Builder (0.0001 ETH) ☕" 
     />
   </Transaction>
 </div>
