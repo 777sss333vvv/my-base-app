@@ -332,10 +332,10 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
     </div>
 )}
 
-          <button 
+<button 
             type="button"
-            className="absolute -left-8 top-1/2 -translate-y-[calc(50%+5.5rem)] bg-transparent rounded-full border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] flex items-center justify-center animate-oracle-sync hover:scale-110 transition-all z-20 overflow-hidden" 
-            style={{ width: '4.8rem', height: '4.8rem' }}
+            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-transparent rounded-full border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] flex items-center justify-center hover:scale-110 transition-all z-20 overflow-hidden" 
+            style={{ width: '4.8rem', height: '4.8rem', marginTop: '-5.4rem' }}
           >
             <img src="/burn.png" className="w-full h-full object-cover rounded-full" alt="Burn 100k" />
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 font-black text-white text-[9px]">
