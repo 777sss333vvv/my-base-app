@@ -10,7 +10,7 @@ import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
 import { useAccount, useConnect, usePublicClient, useWriteContract } from 'wagmi';
 
 const MY_WALLET_ADDRESS = '0x31DB887337778319761330f79E4699a3f9A5F6c3'; 
-const TREASURY_ADDRESS = '0xc70f7D0DFE687AD9e5e2fcdd1FAF0d5B175b81f9'; 
+const TREASURY_ADDRESS = '0x2e0bFFE74d68053c1382B8ae9A87823cCA5799e8'; 
 const B1_CONTRACT_ADDRESS = '0x81c74b0749F528f322CCb8C0539a3F5e0196D154';
 const TOKEN_IMAGE = "/oracle.png"; 
 
@@ -42,15 +42,15 @@ const [isB1Signing, setIsB1Signing] = useState(false);
   const [oracleMessage, setOracleMessage] = useState(() => {
   const initialProphecies = [
 "The pool is limited and the clock is ticking. Will you claim the blessing first? ⏱️🔮",
-    "Support a solo builder. No big corporate teams—just pure code and real rewards. 🛠️🛡️",
-    "Holding our NFT? The Oracle marks you as a true believer. The matrix expands. 🏺✨",
-    "Unlock the ultimate Grand Blessing. Complete both loops to reveal the path. 🔑💎",
-    "Don't just watch the app grow. Support the ecosystem and hunt for the big bounty. 🏛️🌟",
-    "First come, first served. The treasury rewards the fastest souls today. 🎮🔥",
-    "Every NFT holder forms the foundation of the Temple. Loyalty has its rewards. 🛡️🌌",
-    "Built single-handedly, shared with the community. Join the daily ritual. 🚀💙",
-    "The Oracle rewards speed and action. Is there still gold left in the contract? 🏺👁️",
-    "Balance the scales with Faith and Defy. Complete the cycle and test your luck. 📐✨"
+"Support a solo builder. No big corporate teams—just pure code and real rewards. 🛠️🛡️",
+"Holding our NFT? The Oracle marks you as a true believer. The matrix expands. 🏺✨",
+"Unlock the ultimate Grand Blessing. Complete both loops to reveal the path. 🔑💎",
+"Don't just watch the app grow. Support the ecosystem and hunt for the big bounty. 🏛️🌟",
+"First come, first served. The irene555 treasury rewards the fastest souls today. 🎮🔥",
+"Every NFT holder forms the foundation of the Temple. Loyalty has its rewards. 🛡️🌌",
+"Built single-handedly, shared with the community. Join the daily ritual. 🚀💙",
+"The Oracle rewards speed. The genesis price is high—the swiftest actions yield the ultimate value. 🏺👁️",
+"Balance the scales with Faith and Defy. Complete the cycle and test your luck. 📐✨"
   ];
   return initialProphecies[Math.floor(Math.random() * initialProphecies.length)];
 });

@@ -9,7 +9,7 @@ const publicClient = createPublicClient({
   transport: http()
 });
 
-const TREASURY_ADDRESS = '0xa2d290440AAA8FddFF24b7Aef5fc4dc559F6ecDC';
+const TREASURY_ADDRESS = '0x2e0bFFE74d68053c1382B8ae9A87823cCA5799e8';
 const TREASURY_ABI = [
   {
     "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
