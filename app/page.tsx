@@ -179,14 +179,14 @@ const prophecies = useMemo(() => [
     }, 600);
   };
 
-  const handleShare = useCallback(() => {
+const handleShare = useCallback(() => {
     const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
                   : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
                   : `🔮 My Prophecy: "${oracleMessage}"`;
-    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $USERBOX reward! Next attempt in 3 hours. ⏳\n\nAccept or Defy your fate every 3h via @userbox ! ⚡`;
+    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $irene555 reward! Next attempt in 3 hours. ⏳\n\nAccept or Defy your fate every 3h via @userbox ! ⚡`;
     const targetUrl = "https://www.prosperitypass.xyz";
-    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
-    sdk.actions.openUrl(shareUrl);
+    
+    sdk.actions.openUrl(`farcaster://compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
 
@@ -325,7 +325,7 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
         <div className="text-[11px] font-black text-center space-y-1 uppercase leading-tight">
           <p>1. FAITH or DEFY (5,000 $USERBOX) ⚡</p>
           <p>2. SHARE PROPHECY 📢</p> {/* Убрали лишнее и поправили опечатку в Prophecy */}
-          <p>3. CLAIM 10,000 $USERBOX REWARD 💰</p>
+          <p>3. CLAIM 10k irene555 REWARD 💰</p>
         </div>
         <span className="mt-2 text-[9px] opacity-90 font-black italic">Every 3 Hours • Min balance 0.00005 ETH required 🛡️</span>
       </div>
@@ -398,7 +398,7 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
                     sessionStorage.setItem(`claim_viewed_${hash}`, 'true');
                     
                     // Показываем успех (не забудь в функции triggerBonus поставить 6000)
-                    triggerBonus("SUCCESS: 10,000 $USERBOX SENT");
+                    triggerBonus("SUCCESS: 10k $irene555 SENT");
                     
                     setOracleScore(prev => {
                         const ns = prev + 100;
@@ -420,7 +420,7 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                     </span>
-                    <span className="animate-pulse">Sending $USERBOX...</span>
+                    <span className="animate-pulse">Sending $irene555...</span>
                   </button>
                 );
             }
@@ -441,7 +441,7 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
                   }} 
                   className="w-full bg-[#FF00FF] text-white font-black py-5 rounded-2xl text-xs uppercase shadow-[0_0_20px_rgba(255,0,255,0.4)] hover:scale-[1.01] transition-all"
                 >
-                  Claim 10,000 $USERBOX
+                  Claim 10k $irene555
                 </button>
               );
             }
