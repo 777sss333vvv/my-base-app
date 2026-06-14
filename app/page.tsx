@@ -185,8 +185,8 @@ const handleShare = useCallback(() => {
                   : `🔮 My Prophecy: "${oracleMessage}"`;
     const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $irene555 reward! Next attempt in 3 hours. ⏳\n\nAccept or Defy your fate every 3h via @userbox ! ⚡`;
     const targetUrl = "https://www.prosperitypass.xyz";
-    
-    sdk.actions.openUrl(`farcaster://compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`);
+    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
+    sdk.actions.openUrl(shareUrl);
   }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
 
