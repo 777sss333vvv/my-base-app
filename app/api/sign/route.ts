@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     }
     ipCache.set(ip, now);
 
-    // 2. Проверка 12 часов (защита приватного ключа)
+    // 2. Проверка часов (защита приватного ключа)
     const lastClaim = await publicClient.readContract({
       address: TREASURY_ADDRESS,
       abi: TREASURY_ABI,
@@ -44,8 +44,8 @@ export async function POST(req: Request) {
       args: [userAddress as `0x${string}`],
     }) as bigint;
 
-    if (now - Number(lastClaim) < 43200) { // 12 часов в секундах
-      return NextResponse.json({ error: 'Wait 12h' }, { status: 403 });
+    if (now - Number(lastClaim) < 10800) { // часов в секундах
+      return NextResponse.json({ error: 'Wait 3h' }, { status: 403 });
     }
 
     // 3. Генерация подписи
