@@ -41,16 +41,15 @@ const [isB1Signing, setIsB1Signing] = useState(false);
 
   const [oracleMessage, setOracleMessage] = useState(() => {
   const initialProphecies = [
-"The pool is limited and the clock is ticking. Will you claim the blessing first? ⏱️🔮",
-"Support a solo builder. No big corporate teams—just pure code and real rewards. 🛠️🛡️",
-"Holding our NFT? The Oracle marks you as a true believer. The matrix expands. 🏺✨",
-"Unlock the ultimate Grand Blessing. Complete both loops to reveal the path. 🔑💎",
-"Don't just watch the app grow. Support the ecosystem and hunt for the big bounty. 🏛️🌟",
-"First come, first served. The irene555 treasury rewards the fastest souls today. 🎮🔥",
-"Every NFT holder forms the foundation of the Temple. Loyalty has its rewards. 🛡️🌌",
+"Support a solo builder. No corporate fluff—just pure code, fast UI, and real rewards. 🛠️🛡️",
 "Built single-handedly, shared with the community. Join the daily ritual. 🚀💙",
-"The Oracle rewards speed. The genesis price is high—the swiftest actions yield the ultimate value. 🏺👁️",
-"Balance the scales with Faith and Defy. Complete the cycle and test your luck. 📐✨"
+"The fire of deflating power grows stronger every day. Feel the energy of the Temple. 🏛️✨",
+"Every burned token shrinks the supply. The Oracle watches the fire grow. 🏺🔥",
+"The power is yours. You decide when to burn and how much. Complete freedom. 🔮🛡️",
+"Look at the Burn Badge—it is now a clean, permanent symbol of our culture. 💎🔥",
+"Trust the process, follow the vision, and watch the ecosystem thrive. 🌅🌟",
+"A bright future is being built right now. Every step brings us closer to greatness. 🚀🌌",
+"Balance the scales with Faith and Defy. The tokens always return to the community. 📐✨"
   ];
   return initialProphecies[Math.floor(Math.random() * initialProphecies.length)];
 });
@@ -332,17 +331,12 @@ getB1Signature();         // ТЕПЕРЬ И Б3 ЗАПУСКАЕТСЯ ТУТ
     </div>
 )}
 
-<button 
-            type="button"
-            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-transparent rounded-full border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] flex items-center justify-center hover:scale-110 transition-all z-20 overflow-hidden" 
-            style={{ width: '4.8rem', height: '4.8rem', marginTop: '-5.4rem' }}
-          >
-            <img src="/burn.png" className="w-full h-full object-cover rounded-full" alt="Burn 100k" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 font-black text-white text-[9px]">
-              <span>🔥</span>
-              <span>100K</span>
-            </div>
-          </button>
+<div 
+  className="absolute -left-8 top-1/2 -translate-y-1/2 bg-transparent rounded-full border-2 border-cyan-400 flex items-center justify-center z-20 overflow-hidden" 
+  style={{ width: '4.8rem', height: '4.8rem', marginTop: '-5.4rem' }}
+>
+  <img src="/burn.png" className="w-full h-full object-cover rounded-full" alt="Burn Badge" />
+</div>
 
           {/* ТВОЯ ОРИГИНАЛЬНАЯ КНОПКА ОРАКУЛА — ВЕРНУТА ОДИН В ОДИН, КАК БЫЛО */}
           <button 
