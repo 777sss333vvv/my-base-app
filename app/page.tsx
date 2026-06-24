@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
 import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
@@ -178,26 +178,17 @@ const prophecies = useMemo(() => [
     }, 600);
   };
 
-const isSharingRef = useRef(false);
+  
 
 const handleShare = useCallback(() => {
-  if (isSharingRef.current) return;
-  isSharingRef.current = true;
-
-  const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
-                : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
-                : `🔮 My Prophecy: "${oracleMessage}"`;
-
-  const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $irene555 reward! Next attempt in 3 hours. ⏳\n\nAccept or Defy your fate every 3h via @userbox ! ⚡`;
-  const targetUrl = "https://www.prosperitypass.xyz";
-  const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
-  
-  sdk.actions.openUrl(shareUrl);
-
-  setTimeout(() => {
-    isSharingRef.current = false;
-  }, 2000);
-}, [oracleMessage, txCount, oracleScore, lastChoice]);
+    const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
+                  : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
+                  : `🔮 My Prophecy: "${oracleMessage}"`;
+    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $irene555 reward! Next attempt in 3 hours. ⏳\n\nAccept or Defy your fate every 3h via @userbox ! ⚡`;
+    const targetUrl = "https://www.prosperitypass.xyz";
+    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
+    sdk.actions.openUrl(shareUrl);
+  }, [oracleMessage, txCount, oracleScore, lastChoice]);
 
 
 
