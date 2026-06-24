@@ -181,14 +181,28 @@ const prophecies = useMemo(() => [
   
 
 const handleShare = useCallback(() => {
-    const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
-                  : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
-                  : `🔮 My Prophecy: "${oracleMessage}"`;
-    const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $irene555 reward! Next attempt in 3 hours. ⏳\n\nAccept or Defy your fate every 3h via @userbox ! ⚡`;
-    const targetUrl = "https://www.prosperitypass.xyz";
-    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
-    sdk.actions.openUrl(shareUrl);
-  }, [oracleMessage, txCount, oracleScore, lastChoice]);
+  // 1. Проверяем URL: если там уже есть параметр shared=1, полностью останавливаем выполнение
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("shared") === "1") {
+    return;
+  }
+
+  // 2. Сразу же добавляем параметр в URL, чтобы заблокировать повторный запуск
+  const newUrl = new URL(window.location.href);
+  newUrl.searchParams.set("shared", "1");
+  window.history.replaceState({}, '', newUrl.toString());
+
+  // 3. Твой стандартный код сборки текста и открытия Warpcast
+  const intro = lastChoice === 'accept' ? `🔮 I accept the Oracle's prophecy: "${oracleMessage}"` 
+                : lastChoice === 'defy' ? `⚔️ I defy my fate! Prophecy: "${oracleMessage}"`
+                : `🔮 My Prophecy: "${oracleMessage}"`;
+
+  const shareText = `${intro}\n\n🛡️ Base Score: ${txCount ?? 191}\n✨ Oracle Score: ${oracleScore}\n\n🎁 Claimed $irene555 reward! Next attempt in 3 hours. ⏳\n\nAccept or Defy your fate every 3h via @userbox ! ⚡`;
+  const targetUrl = "https://www.prosperitypass.xyz";
+  const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(targetUrl)}`;
+  
+  sdk.actions.openUrl(shareUrl);
+}, [oracleMessage, txCount, oracleScore, lastChoice]);
 
 
 
